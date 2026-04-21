@@ -3,6 +3,11 @@ import { EventEmitter } from 'events';
 import { Server } from 'net';
 import type { SocketMessage, Session, ConversationMessage } from './types.js';
 
+interface BridgeMessage {
+  type: string;
+  payload: unknown;
+}
+
 const SOCKET_PATH = '/tmp/agent-echo.sock';
 
 export class BridgeServer extends EventEmitter {
@@ -16,16 +21,17 @@ export class BridgeServer extends EventEmitter {
     return new Promise((resolve, reject) => {
       this.server = new Server();
 
-      this.server.on('connection', (socket) => {
-        const ws = new WebSocket(`ws://unix/${SOCKET_PATH}`, { server: this.server! });
+      this.wss = new WebSocketServer({ server: this.server });
+
+      this.wss.on('connection', (ws) => {
         this.clients.add(ws);
 
         ws.on('message', (data) => {
           try {
             const message: SocketMessage = JSON.parse(data.toString());
             this.handleMessage(message);
-          } catch {
-            // ignore parse errors
+          } catch (err) {
+            console.error('[BridgeServer] Failed to parse message:', err);
           }
         });
 
@@ -89,8 +95,8 @@ export class BridgeServer extends EventEmitter {
       tty,
       cwd,
       messages: [],
-      startedAt: event.timestamp,
-      lastActivity: event.timestamp,
+      startedAt: event.timestamp || Date.now(),
+      lastActivity: event.timestamp || Date.now(),
     };
     this.sessions.set(sessionId, session);
     this.emit('session:start', session);
@@ -99,7 +105,10 @@ export class BridgeServer extends EventEmitter {
 
   private handleUserPrompt(event: SocketMessage['event'], source: string): void {
     const session = this.findSession(source);
-    if (!session) return;
+    if (!session) {
+      console.warn(`[BridgeServer] No session found for source: ${source}`);
+      return;
+    }
 
     const content = this.extractContent(event.data);
     const msg: ConversationMessage = {
@@ -116,7 +125,10 @@ export class BridgeServer extends EventEmitter {
 
   private handleAssistantMessage(event: SocketMessage['event'], source: string): void {
     const session = this.findSession(source);
-    if (!session) return;
+    if (!session) {
+      console.warn(`[BridgeServer] No session found for source: ${source}`);
+      return;
+    }
 
     const content = this.extractContent(event.data);
     const msg: ConversationMessage = {
@@ -134,7 +146,10 @@ export class BridgeServer extends EventEmitter {
 
   private handleSessionEnd(event: SocketMessage['event'], source: string): void {
     const session = this.findSession(source);
-    if (!session) return;
+    if (!session) {
+      console.warn(`[BridgeServer] No session found for source: ${source}`);
+      return;
+    }
 
     session.lastActivity = event.timestamp;
     this.emit('session:end', session);
@@ -142,8 +157,10 @@ export class BridgeServer extends EventEmitter {
   }
 
   private findSession(source: string): Session | undefined {
-    const sessions = Array.from(this.sessions.values());
-    return sessions[sessions.length - 1];
+    const sessions = Array.from(this.sessions.values())
+      .filter(s => s.source === source)
+      .sort((a, b) => b.lastActivity - a.lastActivity);
+    return sessions[0];
   }
 
   private extractContent(data: Record<string, unknown>): string {
@@ -152,11 +169,15 @@ export class BridgeServer extends EventEmitter {
     return JSON.stringify(data);
   }
 
-  private broadcast(data: unknown): void {
+  private broadcast(data: BridgeMessage): void {
     const message = JSON.stringify(data);
     for (const client of this.clients) {
       if (client.readyState === WebSocket.OPEN) {
-        client.send(message);
+        try {
+          client.send(message);
+        } catch (err) {
+          console.error('[BridgeServer] Failed to send message:', err);
+        }
       }
     }
   }
