@@ -22,7 +22,7 @@ export class NotificationService {
     const notification = new Notification({
       title,
       body,
-      silent: !sound,
+      silent: !sound || !this.soundEnabled,
     });
 
     notification.show();
