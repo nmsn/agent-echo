@@ -14,7 +14,7 @@ export interface HookEvent {
 export interface SocketMessage {
   event: HookEvent;
   source: 'claude' | 'codex' | string;
-  pid?: number;
+  pid: number;
   tty?: string;
-  cwd?: string;
+  cwd: string;
 }

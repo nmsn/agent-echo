@@ -28,7 +28,7 @@ async function main() {
   };
 
   try {
-    const client = new BridgeClient();
+    const client = new BridgeClient(SOCKET_PATH);
     await client.connect();
     client.send(message);
     client.close();

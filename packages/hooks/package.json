@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "type": "module",
   "main": "dist/index.js",
+  "bin": {
+    "agent-echo-hooks": "./dist/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist"
