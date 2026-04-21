@@ -4,10 +4,14 @@ const DEFAULT_SOCKET_PATH = '/tmp/agent-echo.sock';
 
 export class BridgeClient {
   private ws: WebSocket | null = null;
-  private socketPath: string;
+  private _socketPath: string;
 
   constructor(socketPath?: string) {
-    this.socketPath = socketPath || process.env.AGENT_ECHO_SOCKET || DEFAULT_SOCKET_PATH;
+    this._socketPath = socketPath || process.env.AGENT_ECHO_SOCKET || DEFAULT_SOCKET_PATH;
+  }
+
+  get socketPath(): string {
+    return this._socketPath;
   }
 
   connect(): Promise<void> {

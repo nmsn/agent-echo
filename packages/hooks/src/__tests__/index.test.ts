@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import WebSocket from 'ws';
 import { BridgeClient } from '../socket.js';
 import type { HookEvent, SocketMessage } from '../types.js';
@@ -16,11 +16,13 @@ describe('BridgeClient', () => {
     it('uses default socket path when no argument provided', () => {
       const client = new BridgeClient();
       expect(client).toBeDefined();
+      expect(client.socketPath).toBe('/tmp/agent-echo.sock');
     });
 
     it('accepts custom socket path', () => {
       const client = new BridgeClient('/custom/path.sock');
       expect(client).toBeDefined();
+      expect(client.socketPath).toBe('/custom/path.sock');
     });
 
     it('accepts socket path via env var', () => {
@@ -28,6 +30,7 @@ describe('BridgeClient', () => {
       process.env.AGENT_ECHO_SOCKET = '/env/path.sock';
       const client = new BridgeClient();
       expect(client).toBeDefined();
+      expect(client.socketPath).toBe('/env/path.sock');
       if (originalEnv !== undefined) {
         process.env.AGENT_ECHO_SOCKET = originalEnv;
       } else {
@@ -37,6 +40,25 @@ describe('BridgeClient', () => {
   });
 
   describe('send', () => {
+    it('sends JSON-stringified message via websocket', async () => {
+      const client = new BridgeClient();
+      const mockWs = {
+        send: vi.fn(),
+        close: vi.fn(),
+        readyState: WebSocket.OPEN,
+        on: vi.fn((event, callback) => {
+          if (event === 'open') callback();
+        }),
+      };
+      vi.mocked(WebSocket).mockImplementation(() => mockWs as unknown as WebSocket);
+
+      await client.connect();
+      const message = { test: true };
+      client.send(message);
+
+      expect(mockWs.send).toHaveBeenCalledWith(JSON.stringify(message));
+    });
+
     it('does not throw when websocket is not connected', () => {
       const client = new BridgeClient();
       expect(() => client.send({ test: true })).not.toThrow();
@@ -44,6 +66,24 @@ describe('BridgeClient', () => {
   });
 
   describe('close', () => {
+    it('calls ws.close() when websocket exists', async () => {
+      const client = new BridgeClient();
+      const mockWs = {
+        send: vi.fn(),
+        close: vi.fn(),
+        readyState: WebSocket.OPEN,
+        on: vi.fn((event, callback) => {
+          if (event === 'open') callback();
+        }),
+      };
+      vi.mocked(WebSocket).mockImplementation(() => mockWs as unknown as WebSocket);
+
+      await client.connect();
+      client.close();
+
+      expect(mockWs.close).toHaveBeenCalled();
+    });
+
     it('does not throw when websocket is null', () => {
       const client = new BridgeClient();
       expect(() => client.close()).not.toThrow();
