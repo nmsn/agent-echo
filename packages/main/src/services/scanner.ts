@@ -38,7 +38,12 @@ export class ProcessScanner {
     }
   }
 
-  private async scan(): Promise<void> {
+  /**
+   * Trigger a scan for Claude processes.
+   * Note: getProcessDetails() should be called separately to enrich process info
+   * with cwd and transcriptPath if needed.
+   */
+  async scan(): Promise<void> {
     try {
       const processes = await this.discoverProcesses();
       const currentPids = new Set(processes.map((p) => p.pid));
