@@ -160,7 +160,8 @@ export class BridgeServer extends EventEmitter {
     }
     if (!session) return;
 
-    const content = this.extractContent(event.data) || '';
+    const data = event.data || {};
+    const content = (data.text as string) || (data.content as string) || JSON.stringify(data);
 
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('[INPUT] session:', session.id);

@@ -67,35 +67,25 @@ export class ProcessScanner {
   }
 
   private async discoverProcesses(): Promise<ProcessInfo[]> {
-    // Note: pid=,ppid=,tty=,command= produces comma-separated values WITHOUT spaces after commas
-    // e.g. "7613,23293,??,/path/to/claude --flag arg"
-    // So we split by comma first, then reconstruct command from remaining parts
     const { stdout } = await execAsync(
       'ps -Ao pid=,ppid=,tty=,command= | grep -i claude | grep -v grep',
       { maxBuffer: 1024 * 1024 * 10 }
     );
 
-    console.log('[ProcessScanner] Raw ps output:');
-    console.log(stdout.substring(0, 500));
-
     const processes: ProcessInfo[] = [];
     const lines = stdout.split('\n').filter(Boolean);
 
     for (const line of lines) {
-      // Split by comma since format is "pid,ppid,tty,command"
       const parts = line.trim().split(',');
       if (parts.length < 4) continue;
 
       const pidStr = parts[0].trim();
       const ppidStr = parts[1].trim();
       const tty = parts[2].trim();
-      // Command is everything after the first 3 comma-separated fields
       const command = parts.slice(3).join(',').trim();
 
       const pid = parseInt(pidStr, 10);
       const ppid = parseInt(ppidStr, 10);
-
-      console.log('[ProcessScanner] Parsed:', { pid, ppid, tty, command: command?.substring(0, 50) });
 
       if (isNaN(pid)) continue;
 

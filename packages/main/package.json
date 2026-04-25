@@ -1,16 +1,25 @@
 {
   "name": "@agentecho/main",
   "version": "1.0.0",
-  "type": "module",
-  "main": "dist/index.js",
+  "main": "./out/main/index.js",
   "scripts": {
-    "test": "vitest"
-  },
-  "devDependencies": {
-    "vitest": "^2.1.9"
+    "dev": "electron-vite dev",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "clean": "rm -rf out"
   },
   "dependencies": {
-    "@types/node": "^25.6.0",
+    "@agentecho/hooks": "workspace:*",
+    "@electron-toolkit/utils": "^4.0.0",
+    "electron-log": "^5.2.4",
     "ws": "^8.20.0"
+  },
+  "devDependencies": {
+    "@electron-toolkit/preload": "^3.0.2",
+    "@types/node": "^22.0.0",
+    "electron": "^33.4.11",
+    "electron-vite": "^5.0.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.0.0"
   }
 }

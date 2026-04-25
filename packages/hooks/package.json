@@ -4,7 +4,8 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "agent-echo-hooks": "./dist/index.js"
+    "agent-echo-hooks": "./dist/index.js",
+    "agent-echo-hook": "./dist/agent-echo-hook.js"
   },
   "scripts": {
     "build": "tsc",

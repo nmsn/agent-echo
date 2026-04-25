@@ -286,11 +286,11 @@ async function main() {
         console.log('[agent-echo-hook] Transcript path:', transcriptPath, '-> title:', title);
     }
     // Extract message content based on event type
-    if (eventName === 'UserPromptSubmit') {
+    if (finalEventName === 'UserPromptSubmit') {
         const text = (payload.text || payload.prompt || payload.content);
         message.content = text;
-        // Also put in event.data for server to extract
-        message.event.data = { ...message.event.data, text };
+        // Also put in event.data for server to extract (use 'text' key)
+        message.event.data = { ...message.event.data, text, prompt: text };
         console.log('[agent-echo-hook] UserPromptSubmit content:', text?.substring(0, 50));
     }
     // Send via HTTP (wait for completion to ensure delivery)
