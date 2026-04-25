@@ -338,8 +338,11 @@ async function main() {
 
   // Extract message content based on event type
   if (eventName === 'UserPromptSubmit') {
-    message.content = (payload.text || payload.prompt || payload.content) as string;
-    console.log('[agent-echo-hook] UserPromptSubmit content:', message.content?.substring(0, 50));
+    const text = (payload.text || payload.prompt || payload.content) as string;
+    message.content = text;
+    // Also put in event.data for server to extract
+    message.event.data = { ...message.event.data, text };
+    console.log('[agent-echo-hook] UserPromptSubmit content:', text?.substring(0, 50));
   }
 
   // Send via HTTP (wait for completion to ensure delivery)
