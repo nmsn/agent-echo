@@ -1,6 +1,6 @@
 import { ipcMain, BrowserWindow } from 'electron';
-import type { BridgeServer } from '../bridge/server.js';
-import type { NotificationService } from '../services/notifier.js';
+import type { BridgeServer } from '../bridge/server';
+import type { NotificationService } from '../services/notifier';
 
 export function setupIPCHandlers(
   bridgeServer: BridgeServer,

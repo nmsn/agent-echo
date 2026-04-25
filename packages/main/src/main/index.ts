@@ -1,10 +1,10 @@
 import { app, BrowserWindow, Menu, Tray, nativeImage } from 'electron'
 import { join } from 'path'
-import { BridgeServer } from '../bridge/server.js'
-import { ProcessScanner } from '../services/scanner.js'
-import { NotificationService } from '../services/notifier.js'
-import { HookConfigService } from '../services/hook-config.js'
-import { setupIPCHandlers } from '../ipc/handlers.js'
+import { BridgeServer } from '../bridge/server'
+import { ProcessScanner } from '../services/scanner'
+import { NotificationService } from '../services/notifier'
+import { HookConfigService } from '../services/hook-config'
+import { setupIPCHandlers } from '../ipc/handlers'
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null

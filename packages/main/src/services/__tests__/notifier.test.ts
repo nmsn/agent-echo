@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { NotificationService } from '../notifier.js';
+import { NotificationService } from '../notifier';
 
 // Mock electron before importing NotificationService
 vi.mock('electron', () => ({

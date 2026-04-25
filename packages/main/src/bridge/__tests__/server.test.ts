@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { BridgeServer } from '../server.js';
-import type { SocketMessage } from '../types.js';
+import { BridgeServer } from '../server';
+import type { SocketMessage } from '../types';
 
 describe('BridgeServer', () => {
   let server: BridgeServer;

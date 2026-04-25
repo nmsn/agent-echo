@@ -1,6 +1,6 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { EventEmitter } from 'events';
-import type { SocketMessage, Session, ConversationMessage } from './types.js';
+import type { SocketMessage, Session, ConversationMessage } from './types';
 
 const HTTP_PORT = 18765;
 const HTTP_URL = `http://localhost:${HTTP_PORT}`;

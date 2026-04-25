@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { ProcessScanner } from '../scanner.js';
+import { ProcessScanner } from '../scanner';
 
 // Mock child_process
 vi.mock('child_process', () => ({
