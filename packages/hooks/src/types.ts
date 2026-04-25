@@ -1,20 +1,37 @@
 export type HookEventType =
   | 'SessionStart'
   | 'UserPromptSubmit'
-  | 'AssistantMessage'
-  | 'SessionEnd';
+  | 'SessionEnd'
+  | 'PreToolUse'
+  | 'PostToolUse'
+  | 'PostToolUseFailure'
+  | 'Stop'
+  | 'SubagentStart'
+  | 'SubagentStop'
+  | 'PreCompact'
+  | 'PostCompact'
+  | 'Notification'
+  | 'Elicitation';
 
 export interface HookEvent {
   type: HookEventType;
-  timestamp: number;
+  timestamp?: number;
   sessionId?: string;
   data: Record<string, unknown>;
 }
 
 export interface SocketMessage {
   event: HookEvent;
-  source: 'claude' | 'codex' | string;
-  pid: number;
+  source: string;
+  pid?: number;
   tty?: string;
-  cwd: string;
+  cwd?: string;
+  editor?: string;
+  agentPid?: number;
+  pidChain?: number[];
+  headless?: boolean;
+  sessionTitle?: string;
+  // message content
+  content?: string;
+  response?: string;
 }

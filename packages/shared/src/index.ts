@@ -1,7 +1,6 @@
 export type HookEventType =
   | 'SessionStart'
   | 'UserPromptSubmit'
-  | 'AssistantMessage'
   | 'SessionEnd';
 
 export interface HookEvent {

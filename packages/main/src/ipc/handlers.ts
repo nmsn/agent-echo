@@ -1,10 +1,11 @@
-import { ipcMain } from 'electron';
+import { ipcMain, BrowserWindow } from 'electron';
 import type { BridgeServer } from '../bridge/server.js';
 import type { NotificationService } from '../services/notifier.js';
 
 export function setupIPCHandlers(
   bridgeServer: BridgeServer,
-  notifier: NotificationService
+  notifier: NotificationService,
+  mainWindow: BrowserWindow
 ): void {
   ipcMain.handle('config:get', () => {
     return {
@@ -24,5 +25,22 @@ export function setupIPCHandlers(
 
   ipcMain.handle('bridge:sessions', () => {
     return bridgeServer.getSessions();
+  });
+
+  // Real-time session updates
+  bridgeServer.on('session:start', (session) => {
+    mainWindow?.webContents.send('session:start', session);
+  });
+
+  bridgeServer.on('session:end', (session) => {
+    mainWindow?.webContents.send('session:end', session);
+  });
+
+  bridgeServer.on('message:user', (message, session) => {
+    mainWindow?.webContents.send('message:user', message, session.id);
+  });
+
+  bridgeServer.on('message:assistant', (message, session) => {
+    mainWindow?.webContents.send('message:assistant', message, session.id);
   });
 }

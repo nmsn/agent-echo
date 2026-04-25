@@ -1,58 +1,32 @@
-import { WebSocketServer, WebSocket } from 'ws';
+import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { EventEmitter } from 'events';
-import { Server } from 'net';
 import type { SocketMessage, Session, ConversationMessage } from './types.js';
 
-interface BridgeMessage {
-  type: string;
-  payload: unknown;
-}
-
-const SOCKET_PATH = '/tmp/agent-echo.sock';
+const HTTP_PORT = 18765;
+const HTTP_URL = `http://localhost:${HTTP_PORT}`;
 
 export class BridgeServer extends EventEmitter {
-  private wss: WebSocketServer | null = null;
-  private server: Server | null = null;
+  private server: ReturnType<typeof createServer> | null = null;
   private sessions: Map<string, Session> = new Map();
-  private clients: Set<WebSocket> = new Set();
   private running = false;
 
   start(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.server = new Server();
-
-      this.wss = new WebSocketServer({ server: this.server });
-
-      this.wss.on('connection', (ws) => {
-        this.clients.add(ws);
-
-        ws.on('message', (data) => {
-          try {
-            const message: SocketMessage = JSON.parse(data.toString());
-            this.handleMessage(message);
-          } catch (err) {
-            console.error('[BridgeServer] Failed to parse message:', err);
-          }
-        });
-
-        ws.on('close', () => {
-          this.clients.delete(ws);
-        });
+      this.server = createServer((req: IncomingMessage, res: ServerResponse) => {
+        this.handleRequest(req, res);
       });
 
       this.server.on('error', reject);
-      this.server.listen(SOCKET_PATH, () => {
+      this.server.listen(HTTP_PORT, () => {
         this.running = true;
-        console.log(`[BridgeServer] Listening on ${SOCKET_PATH}`);
+        console.log(`[BridgeServer] Listening on ${HTTP_URL}`);
         resolve();
       });
     });
   }
 
   stop(): void {
-    this.wss?.close();
     this.server?.close();
-    this.clients.clear();
     this.sessions.clear();
     this.running = false;
   }
@@ -61,21 +35,61 @@ export class BridgeServer extends EventEmitter {
     return this.running;
   }
 
+  private handleRequest(req: IncomingMessage, res: ServerResponse): void {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+      res.writeHead(204);
+      res.end();
+      return;
+    }
+
+    if (req.method !== 'POST') {
+      res.writeHead(405);
+      res.end();
+      return;
+    }
+
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const message: SocketMessage = JSON.parse(body);
+        this.handleMessage(message);
+        res.writeHead(200);
+        res.end('OK');
+      } catch (err: unknown) {
+        console.error('[BridgeServer] JSON parse error:', (err as Error).message);
+        res.writeHead(400);
+        res.end('Invalid JSON');
+      }
+    });
+  }
+
   private handleMessage(message: SocketMessage): void {
-    const { event, source, pid, tty, cwd } = message;
+    const { event, source: rawSource, pid, cwd } = message;
+    const source = (rawSource ?? 'claude').trim();
 
     switch (event.type) {
       case 'SessionStart':
-        this.handleSessionStart(event, source, pid, tty, cwd);
+        this.handleSessionStart(event, source, pid, undefined, cwd);
         break;
       case 'UserPromptSubmit':
-        this.handleUserPrompt(event, source);
-        break;
-      case 'AssistantMessage':
-        this.handleAssistantMessage(event, source);
+        this.handleUserPrompt(event, source, pid, cwd);
         break;
       case 'SessionEnd':
         this.handleSessionEnd(event, source);
+        break;
+      case 'Stop':
+        this.handleStop(event, source);
+        break;
+      case 'PostToolUse':
+        this.handlePostToolUse(event, source);
+        break;
+      case 'PostToolUseFailure':
+        this.handlePostToolUseFailure(event, source);
         break;
     }
   }
@@ -94,70 +108,192 @@ export class BridgeServer extends EventEmitter {
       pid,
       tty,
       cwd,
+      editor: undefined,
+      agentPid: undefined,
       messages: [],
       startedAt: event.timestamp || Date.now(),
       lastActivity: event.timestamp || Date.now(),
+      sessionTitle: undefined,
+      headless: undefined,
     };
     this.sessions.set(sessionId, session);
     this.emit('session:start', session);
-    this.broadcast({ type: 'session:start', payload: session });
   }
 
-  private handleUserPrompt(event: SocketMessage['event'], source: string): void {
-    const session = this.findSession(source);
-    if (!session) {
-      console.warn(`[BridgeServer] No session found for source: ${source}`);
-      return;
+  private createSession(
+    sessionId: string | undefined,
+    source: string,
+    pid?: number,
+    tty?: string,
+    cwd?: string
+  ): Session | undefined {
+    if (!sessionId) {
+      sessionId = `session_${Date.now()}`;
     }
+    const session: Session = {
+      id: sessionId,
+      source,
+      pid,
+      tty,
+      cwd,
+      editor: undefined,
+      agentPid: undefined,
+      messages: [],
+      startedAt: Date.now(),
+      lastActivity: Date.now(),
+      sessionTitle: undefined,
+      headless: undefined,
+    };
+    this.sessions.set(sessionId, session);
+    this.emit('session:start', session);
+    return session;
+  }
 
-    const content = this.extractContent(event.data);
+  private handleUserPrompt(event: SocketMessage['event'], source: string, pid?: number, cwd?: string): void {
+    const sessionId = event.sessionId;
+    let session = sessionId ? this.sessions.get(sessionId) : undefined;
+    if (!session) {
+      session = this.findSession(source);
+    }
+    if (!session) {
+      session = this.createSession(sessionId, source, pid, undefined, cwd);
+    }
+    if (!session) return;
+
+    const content = this.extractContent(event.data) || '';
+
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('[INPUT] session:', session.id);
+    console.log('[INPUT]', content);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
     const msg: ConversationMessage = {
       id: `msg_${Date.now()}`,
       role: 'user',
       content,
-      timestamp: event.timestamp,
+      timestamp: event.timestamp || Date.now(),
     };
 
     session.messages.push(msg);
-    session.lastActivity = event.timestamp;
+    session.lastActivity = event.timestamp || Date.now();
     this.emit('message:user', msg, session);
   }
 
-  private handleAssistantMessage(event: SocketMessage['event'], source: string): void {
-    const session = this.findSession(source);
+  private handleSessionEnd(event: SocketMessage['event'], source: string): void {
+    const sessionId = event.sessionId;
+    let session = sessionId ? this.sessions.get(sessionId) : undefined;
     if (!session) {
-      console.warn(`[BridgeServer] No session found for source: ${source}`);
-      return;
+      session = this.findSession(source);
     }
+    if (!session) {
+      session = this.createSession(sessionId, source);
+    }
+    if (!session) return;
 
-    const content = this.extractContent(event.data);
+    session.lastActivity = event.timestamp || Date.now();
+    this.emit('session:end', session);
+  }
+
+  private handleStop(event: SocketMessage['event'], source: string): void {
+    const sessionId = event.sessionId;
+    let session = sessionId ? this.sessions.get(sessionId) : undefined;
+    if (!session) {
+      session = this.findSession(source);
+    }
+    if (!session) {
+      session = this.createSession(sessionId, source);
+    }
+    if (!session) return;
+
+    const data = event.data || {};
+    const lastMsg = data.last_assistant_message as string | undefined;
+
+    if (lastMsg && typeof lastMsg === 'string' && lastMsg.trim()) {
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('[OUTPUT] session:', session.id);
+      console.log('[OUTPUT]', lastMsg);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+      const msg: ConversationMessage = {
+        id: `msg_${Date.now()}`,
+        role: 'assistant',
+        content: lastMsg,
+        timestamp: event.timestamp || Date.now(),
+      };
+
+      session.messages.push(msg);
+      session.lastActivity = event.timestamp || Date.now();
+      this.emit('message:assistant', msg, session);
+    }
+  }
+
+  private handlePostToolUse(event: SocketMessage['event'], source: string): void {
+    const sessionId = event.sessionId;
+    let session = sessionId ? this.sessions.get(sessionId) : undefined;
+    if (!session) {
+      session = this.findSession(source);
+    }
+    if (!session) {
+      session = this.createSession(sessionId, source);
+    }
+    if (!session) return;
+
+    const data = event.data || {};
+    const content = (data.result as string) || (data.response as string) || '';
+    if (!content) return;
+
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('[OUTPUT] session:', session.id);
+    console.log('[OUTPUT]', content);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
     const msg: ConversationMessage = {
       id: `msg_${Date.now()}`,
       role: 'assistant',
       content,
-      timestamp: event.timestamp,
+      timestamp: event.timestamp || Date.now(),
     };
 
     session.messages.push(msg);
-    session.lastActivity = event.timestamp;
+    session.lastActivity = event.timestamp || Date.now();
     this.emit('message:assistant', msg, session);
-    this.broadcast({ type: 'message', payload: msg });
   }
 
-  private handleSessionEnd(event: SocketMessage['event'], source: string): void {
-    const session = this.findSession(source);
+  private handlePostToolUseFailure(event: SocketMessage['event'], source: string): void {
+    const sessionId = event.sessionId;
+    let session = sessionId ? this.sessions.get(sessionId) : undefined;
     if (!session) {
-      console.warn(`[BridgeServer] No session found for source: ${source}`);
-      return;
+      session = this.findSession(source);
     }
+    if (!session) {
+      session = this.createSession(sessionId, source);
+    }
+    if (!session) return;
 
-    session.lastActivity = event.timestamp;
-    this.emit('session:end', session);
-    this.broadcast({ type: 'session:end', payload: { id: session.id } });
+    const data = event.data || {};
+    const error = data.error as string || JSON.stringify(data);
+    const content = `[Tool Error] ${error}`;
+
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('[ERROR] session:', session.id);
+    console.log('[ERROR]', content);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+    const msg: ConversationMessage = {
+      id: `msg_${Date.now()}`,
+      role: 'assistant',
+      content,
+      timestamp: event.timestamp || Date.now(),
+    };
+
+    session.messages.push(msg);
+    session.lastActivity = event.timestamp || Date.now();
+    this.emit('message:assistant', msg, session);
   }
 
   private findSession(source: string): Session | undefined {
-    const sessions = Array.from(this.sessions.values())
+    const allSessions = Array.from(this.sessions.values());
+    const sessions = allSessions
       .filter(s => s.source === source)
       .sort((a, b) => b.lastActivity - a.lastActivity);
     return sessions[0];
@@ -167,19 +303,6 @@ export class BridgeServer extends EventEmitter {
     if (typeof data.content === 'string') return data.content;
     if (typeof data.text === 'string') return data.text;
     return JSON.stringify(data);
-  }
-
-  private broadcast(data: BridgeMessage): void {
-    const message = JSON.stringify(data);
-    for (const client of this.clients) {
-      if (client.readyState === WebSocket.OPEN) {
-        try {
-          client.send(message);
-        } catch (err) {
-          console.error('[BridgeServer] Failed to send message:', err);
-        }
-      }
-    }
   }
 
   getSessions(): Session[] {

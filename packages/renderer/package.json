@@ -9,8 +9,10 @@
   },
   "dependencies": {
     "@agentecho/shared": "workspace:*",
+    "@tailwindcss/vite": "^4.2.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "tailwindcss": "^4.2.4",
     "zustand": "^4.5.7"
   },
   "devDependencies": {

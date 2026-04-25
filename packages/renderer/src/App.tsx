@@ -1,13 +1,23 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useConversationStore } from './stores/conversation';
 import { ChatView } from './components/ChatView';
 import { SettingsPanel } from './components/SettingsPanel';
 import { StatusBar } from './components/StatusBar';
 
 export function App() {
-  const { settings, updateSettings, sessions } = useConversationStore();
+  const { settings, updateSettings, sessions, isBridgeRunning, fetchSessions, subscribeToEvents } = useConversationStore();
   const [showSettings, setShowSettings] = useState(false);
-  const [isBridgeRunning] = useState(true);
+
+  // Subscribe to real-time events and fetch initial sessions
+  useEffect(() => {
+    fetchSessions();
+    const unsubscribe = subscribeToEvents();
+    const interval = setInterval(fetchSessions, 5000);
+    return () => {
+      unsubscribe();
+      clearInterval(interval);
+    };
+  }, [fetchSessions, subscribeToEvents]);
 
   const handleSettingsChange = useCallback(
     (newSettings: typeof settings) => {
