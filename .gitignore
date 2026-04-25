@@ -2,9 +2,12 @@
 node_modules
 
 # Build outputs
-dist/
-out/
 *.tgz
+packages/main/out/
+packages/renderer/dist/
+
+# Hooks dist IS committed (bin entry)
+# (do NOT ignore packages/hooks/dist/)
 
 # Environment
 .env
