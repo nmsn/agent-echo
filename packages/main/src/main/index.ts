@@ -18,8 +18,11 @@ function getAppPaths() {
   const basePath = isDev ? process.cwd() : join(app.getAppPath(), '..')
   return {
     basePath,
+    isDev,
     preloadPath: join(basePath, 'out', 'preload', 'index.js'),
-    htmlPath: join(basePath, 'out', 'renderer', 'index.html'),
+    htmlPath: isDev
+      ? (process.env.ELECTRON_RENDERER_VITE_URL || 'http://localhost:5173')
+      : join(basePath, 'out', 'renderer', 'index.html'),
     iconPath: join(app.getAppPath(), 'build', 'icon.png'),
   }
 }
@@ -36,7 +39,11 @@ function createWindow(): void {
     },
   })
 
-  mainWindow.loadFile(paths.htmlPath)
+  if (paths.isDev) {
+    mainWindow.loadURL(paths.htmlPath)
+  } else {
+    mainWindow.loadFile(paths.htmlPath)
+  }
 
   mainWindow.on('close', (event) => {
     if (process.platform !== 'darwin') {

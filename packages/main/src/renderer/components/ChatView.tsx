@@ -13,8 +13,8 @@ export function ChatView({ onSpeak }: ChatViewProps) {
 
   if (!activeSession) {
     return (
-      <div className="chat-view chat-view-empty">
-        <p>暂无活动会话</p>
+      <div className="flex-1 flex items-center justify-center">
+        <p className="text-muted-foreground">暂无活动会话</p>
       </div>
     );
   }
@@ -25,13 +25,13 @@ export function ChatView({ onSpeak }: ChatViewProps) {
   }
 
   return (
-    <div className="chat-view">
-      <div className="chat-header">
-        <span className="session-source">{activeSession.source}</span>
+    <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="px-4 py-2 border-b border-border bg-card">
+        <span className="text-sm text-foreground">{activeSession.source}</span>
       </div>
-      <div className="message-list">
+      <div className="flex-1 overflow-y-auto px-4 py-4">
         {activeSession.messages.length === 0 ? (
-          <p className="no-messages">暂无消息</p>
+          <p className="text-muted-foreground text-sm">暂无消息</p>
         ) : (
           activeSession.messages.map((message) => (
             <MessageItem

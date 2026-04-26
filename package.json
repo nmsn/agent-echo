@@ -13,9 +13,6 @@
     "hooks:uninstall": "node scripts/hooks/uninstall.js"
   },
   "devDependencies": {
-    "@electron-toolkit/preload": "^3.0.2",
-    "@electron-toolkit/utils": "^4.0.0",
-    "electron": "33.4.11",
     "electron-vite": "^5.0.0",
     "tsx": "^4.21.0"
   }

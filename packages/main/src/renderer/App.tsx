@@ -34,11 +34,11 @@ export function App() {
   const processCount = sessions.length;
 
   return (
-    <div className="app">
-      <header className="app-header">
-        <h1>Agent Echo</h1>
+    <div className="min-h-screen flex flex-col bg-background">
+      <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
+        <h1 className="text-lg font-semibold text-foreground">Agent Echo</h1>
         <button
-          className="settings-toggle"
+          className="px-3 py-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground transition-colors text-sm"
           onClick={() => setShowSettings(!showSettings)}
         >
           {showSettings ? '关闭设置' : '设置'}
@@ -51,7 +51,7 @@ export function App() {
         <SettingsPanel settings={settings} onSettingsChange={handleSettingsChange} />
       )}
 
-      <main className="app-main">
+      <main className="flex-1 overflow-hidden">
         <ChatView onSpeak={handleSpeak} />
       </main>
     </div>
