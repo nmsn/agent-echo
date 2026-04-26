@@ -32,3 +32,9 @@ Thumbs.db
 # Test
 *.test.js
 __tests__/
+
+# pnpm workspace node_modules
+packages/*/node_modules
+packages/hooks/node_modules/
+packages/main/node_modules/
+packages/renderer/node_modules/
