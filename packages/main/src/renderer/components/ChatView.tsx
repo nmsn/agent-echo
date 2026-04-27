@@ -37,6 +37,7 @@ export function ChatView({ onSpeak }: ChatViewProps) {
             <MessageItem
               key={message.id}
               message={message}
+              sessionId={activeSession.id}
               showTranslation={settings.translationEnabled}
               onSpeak={onSpeak}
             />
