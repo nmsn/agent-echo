@@ -77,3 +77,15 @@ import { BridgeServer } from './bridge/server.js';
 ### Claude Code Hook 配置
 
 Hook 通过 `scripts/hooks/install.js` 安装到 `~/.claude/settings.json`，会在 Electron 启动时自动检测并配置。
+
+### 图标
+
+所有图标统一从 `lucide-react` 获取，不再使用其他图标库或 emoji。
+
+```tsx
+import { Settings, Trash2, Play } from 'lucide-react';
+
+<Settings className="w-4 h-4" />
+```
+
+

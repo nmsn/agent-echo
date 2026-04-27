@@ -1,3 +1,6 @@
+import { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import { Volume2, Languages } from 'lucide-react';
 import type { ConversationMessage } from '@agentecho/shared';
 
 interface MessageItemProps {
@@ -11,6 +14,8 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
   const isUser = message.role === 'user';
   const shortSessionId = sessionId.length > 8 ? sessionId.slice(0, 8) + '…' : sessionId;
   const showCleaned = !!message.cleaned;
+  const [hovered, setHovered] = useState(false);
+
   const handleSpeak = () => {
     if (onSpeak) {
       onSpeak(message.content);
@@ -19,18 +24,47 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
 
   return (
     <div className={`mb-4 flex ${isUser ? 'justify-end' : 'justify-start'}`}>
-      <div className={`max-w-[80%] ${isUser ? 'order-1' : 'order-1'}`}>
+      <div
+        className={`max-w-[80%] relative ${isUser ? 'order-1' : 'order-1'}`}
+        onMouseEnter={() => setHovered(true)}
+        onMouseLeave={() => setHovered(false)}
+      >
         <div className="text-[10px] leading-none text-muted-foreground/40 mb-0.5 px-1 select-none">
           {shortSessionId}
         </div>
         <div
-          className={`px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap wrap-break-word ${
+          className={`relative px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap wrap-break-word ${
             isUser
               ? 'bg-primary text-primary-foreground rounded-2xl rounded-br-md'
               : 'bg-secondary text-secondary-foreground rounded-2xl rounded-bl-md'
           }`}
         >
           {message.content}
+          <AnimatePresence>
+            {hovered && (
+              <motion.div
+                initial={{ y: 4, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: 4, opacity: 0 }}
+                transition={{ duration: 0.15 }}
+                className="absolute bottom-1 right-1 flex items-center gap-0.5"
+              >
+                <button
+                  className="p-0.5 rounded-md text-foreground/50 hover:text-foreground hover:bg-foreground/10 transition-colors"
+                  onClick={handleSpeak}
+                  title="朗读"
+                >
+                  <Volume2 className="w-3 h-3" />
+                </button>
+                <button
+                  className="p-0.5 rounded-md text-foreground/50 hover:text-foreground hover:bg-foreground/10 transition-colors"
+                  title="翻译"
+                >
+                  <Languages className="w-3 h-3" />
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
         {showCleaned && (
           <div className={`mt-2 px-4 py-2 text-xs leading-relaxed whitespace-pre-wrap wrap-break-word ${
@@ -42,22 +76,6 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
             {message.cleaned}
           </div>
         )}
-        {(showTranslation && message.translated) || (showTranslation && onSpeak) ? (
-          <div className={`flex items-center gap-2 mt-1 ${isUser ? 'justify-end' : 'justify-start'}`}>
-            {showTranslation && message.translated && (
-              <span className="text-xs text-muted-foreground italic">{message.translated}</span>
-            )}
-            {showTranslation && onSpeak && (
-              <button
-                className="px-2 py-0.5 text-xs rounded bg-secondary text-secondary-foreground hover:bg-accent transition-colors"
-                onClick={handleSpeak}
-                title="朗读"
-              >
-                🔊
-              </button>
-            )}
-          </div>
-        ) : null}
       </div>
     </div>
   );
