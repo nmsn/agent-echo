@@ -55,6 +55,7 @@ export interface ConversationMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  cleaned?: string;
   original?: string;
   translated?: string;
   timestamp: number;

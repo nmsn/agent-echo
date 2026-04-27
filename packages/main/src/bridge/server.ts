@@ -1,6 +1,7 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { EventEmitter } from 'events';
 import type { SocketMessage, Session, ConversationMessage } from './types';
+import { cleanTerminalOutput } from '@agentecho/shared';
 
 const HTTP_PORT = 18765;
 const HTTP_URL = `http://localhost:${HTTP_PORT}`;
@@ -172,6 +173,7 @@ export class BridgeServer extends EventEmitter {
       id: `msg_${Date.now()}`,
       role: 'user',
       content,
+      cleaned: cleanTerminalOutput(content),
       timestamp: event.timestamp || Date.now(),
     };
 
@@ -219,6 +221,7 @@ export class BridgeServer extends EventEmitter {
         id: `msg_${Date.now()}`,
         role: 'assistant',
         content: lastMsg,
+        cleaned: cleanTerminalOutput(lastMsg),
         timestamp: event.timestamp || Date.now(),
       };
 
@@ -252,6 +255,7 @@ export class BridgeServer extends EventEmitter {
       id: `msg_${Date.now()}`,
       role: 'assistant',
       content,
+      cleaned: cleanTerminalOutput(content),
       timestamp: event.timestamp || Date.now(),
     };
 
@@ -284,6 +288,7 @@ export class BridgeServer extends EventEmitter {
       id: `msg_${Date.now()}`,
       role: 'assistant',
       content,
+      cleaned: cleanTerminalOutput(content),
       timestamp: event.timestamp || Date.now(),
     };
 

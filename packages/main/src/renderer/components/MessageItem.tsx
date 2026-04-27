@@ -10,6 +10,7 @@ interface MessageItemProps {
 export function MessageItem({ message, sessionId, showTranslation, onSpeak }: MessageItemProps) {
   const isUser = message.role === 'user';
   const shortSessionId = sessionId.length > 8 ? sessionId.slice(0, 8) + '…' : sessionId;
+  const showCleaned = !!message.cleaned;
   const handleSpeak = () => {
     if (onSpeak) {
       onSpeak(message.content);
@@ -31,6 +32,16 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
         >
           {message.content}
         </div>
+        {showCleaned && (
+          <div className={`mt-2 px-4 py-2 text-xs leading-relaxed whitespace-pre-wrap wrap-break-word ${
+            isUser
+              ? 'bg-primary/50 text-primary-foreground/70 rounded-2xl rounded-br-md'
+              : 'bg-secondary/50 text-secondary-foreground/70 rounded-2xl rounded-bl-md'
+          }`}>
+            <div className="mb-1.5 border-t border-border/40" />
+            {message.cleaned}
+          </div>
+        )}
         {(showTranslation && message.translated) || (showTranslation && onSpeak) ? (
           <div className={`flex items-center gap-2 mt-1 ${isUser ? 'justify-end' : 'justify-start'}`}>
             {showTranslation && message.translated && (

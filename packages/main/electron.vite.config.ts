@@ -6,12 +6,16 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   main: {
     build: {
-      externalizeDeps: true
+      externalizeDeps: {
+        exclude: ['@agentecho/shared']
+      }
     }
   },
   preload: {
     build: {
-      externalizeDeps: true
+      externalizeDeps: {
+        exclude: ['@agentecho/shared']
+      }
     }
   },
   renderer: {

@@ -25,6 +25,7 @@ export interface ConversationMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  cleaned?: string;
   original?: string;
   translated?: string;
   timestamp: number;
@@ -34,3 +35,5 @@ export interface BridgeMessage {
   type: 'message' | 'session:start' | 'session:end';
   payload: ConversationMessage | Session | { id: string };
 }
+
+export * from './utils';
