@@ -5,6 +5,7 @@ node_modules
 *.tgz
 packages/main/out/
 packages/renderer/dist/
+packages/shared/dist/
 
 # Hooks dist IS committed (bin entry)
 # (do NOT ignore packages/hooks/dist/)
