@@ -139,7 +139,18 @@ export function classifyContent(text: string): ContentClass {
 
 // ── Main Clean Pipeline ──
 export function cleanTerminalOutput(raw: string): string {
-  return [stripAnsi, normalizeNewlines, compressBlankLines, stripShellPrompts]
+  const cleaned = [stripAnsi, normalizeNewlines, compressBlankLines, stripShellPrompts]
     .reduce((acc, fn) => fn(acc), raw)
     .trim();
+
+  if (!cleaned || cleaned.length < 2) return '';
+
+  // Skip progress bars, spinners, single chars
+  if (isProgressOutput(cleaned)) return '';
+
+  // Classify content type — skip meaningless content
+  const contentClass = classifyContent(cleaned);
+  if (contentClass === 'skip') return '';
+
+  return cleaned;
 }
