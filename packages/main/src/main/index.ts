@@ -1,10 +1,20 @@
 import { app, BrowserWindow, Menu, Tray, nativeImage } from 'electron'
 import { join } from 'path'
+import { config } from 'dotenv'
 import { BridgeServer } from '../bridge/server'
 import { ProcessScanner } from '../services/scanner'
 import { NotificationService } from '../services/notifier'
 import { HookConfigService } from '../services/hook-config'
+import { TranslationService } from '../services/translation'
+import { TTSService } from '../services/tts'
 import { setupIPCHandlers } from '../ipc/handlers'
+
+// Load .env file for development
+const isDev = !app.isPackaged
+if (isDev) {
+  const envPath = join(app.getAppPath(), '..', '..', '.env')
+  config({ path: envPath })
+}
 
 let mainWindow: BrowserWindow | null = null
 let tray: Tray | null = null
@@ -12,9 +22,10 @@ let bridgeServer: BridgeServer
 let processScanner: ProcessScanner
 let notifier: NotificationService
 let hookConfigService: HookConfigService
+let translationService: TranslationService
+let ttsService: TTSService
 
 function getAppPaths() {
-  const isDev = !app.isPackaged
   const basePath = isDev ? process.cwd() : join(app.getAppPath(), '..')
   return {
     basePath,
@@ -87,7 +98,33 @@ async function initialize(): Promise<void> {
   createTray()
 
   bridgeServer = new BridgeServer()
-  setupIPCHandlers(bridgeServer, notifier, mainWindow)
+  translationService = new TranslationService()
+  ttsService = new TTSService()
+
+  // Apply .env config if set, otherwise keep defaults
+  const envApiKey = process.env.MINIMAX_TRANSLATION_API_KEY
+  if (envApiKey && envApiKey !== 'your_minimax_api_key_here') {
+    translationService.configure({
+      apiKey: envApiKey,
+      apiBase: process.env.MINIMAX_TRANSLATION_API_BASE || 'https://api.minimaxi.com/anthropic',
+      modelName: process.env.MINIMAX_TRANSLATION_MODEL || 'MiniMax-Text-01',
+    })
+    console.log('[Main] Translation service configured from .env')
+  }
+
+  // Apply .env TTS config if set
+  const ttsApiKey = process.env.MINIMAX_TTS_API_KEY || envApiKey
+  if (ttsApiKey && ttsApiKey !== 'your_minimax_api_key_here') {
+    ttsService.configure({
+      apiKey: ttsApiKey,
+      apiBase: process.env.MINIMAX_TTS_API_BASE || 'https://api.minimaxi.com',
+      model: process.env.MINIMAX_TTS_MODEL || 'speech-2.8-hd',
+      voiceId: process.env.MINIMAX_TTS_VOICE_ID || 'male-qn-qingse',
+    })
+    console.log('[Main] TTS service configured from .env')
+  }
+
+  setupIPCHandlers(bridgeServer, notifier, translationService, ttsService, mainWindow)
 
   try {
     await bridgeServer.start()

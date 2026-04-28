@@ -1,10 +1,14 @@
 import { ipcMain, BrowserWindow } from 'electron';
 import type { BridgeServer } from '../bridge/server';
 import type { NotificationService } from '../services/notifier';
+import type { TranslationService } from '../services/translation';
+import type { TTSService } from '../services/tts';
 
 export function setupIPCHandlers(
   bridgeServer: BridgeServer,
   notifier: NotificationService,
+  translationService: TranslationService,
+  ttsService: TTSService,
   mainWindow: BrowserWindow
 ): void {
   ipcMain.handle('config:get', () => {
@@ -25,6 +29,51 @@ export function setupIPCHandlers(
 
   ipcMain.handle('bridge:sessions', () => {
     return bridgeServer.getSessions();
+  });
+
+  // Translation handlers
+  ipcMain.handle('translate:configure', (_, config) => {
+    translationService.configure(config);
+    return translationService.getConfig();
+  });
+
+  ipcMain.handle('translate:request', async (_, messageId, text, contentType) => {
+    try {
+      const result = await translationService.translate(messageId, text, contentType);
+      return { success: true, translated: result };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : String(err) };
+    }
+  });
+
+  // Forward translation events to renderer
+  translationService.on('translate:result', (result) => {
+    mainWindow?.webContents.send('translate:result', result);
+  });
+
+  translationService.on('translate:error', (error) => {
+    mainWindow?.webContents.send('translate:error', error);
+  });
+
+  // TTS handlers
+  ipcMain.handle('tts:configure', (_, config) => {
+    ttsService.configure(config);
+    return ttsService.getConfig();
+  });
+
+  ipcMain.handle('tts:speak', async (_, messageId, text) => {
+    try {
+      const result = await ttsService.speak(text, messageId);
+      // Return base64 data URL instead of file path
+      return { success: true, audioData: result.audioData };
+    } catch (err) {
+      return { success: false, error: err instanceof Error ? err.message : String(err) };
+    }
+  });
+
+  // Forward TTS events to renderer
+  ttsService.on('tts:result', (result) => {
+    mainWindow?.webContents.send('tts:result', result);
   });
 
   // Real-time session updates
