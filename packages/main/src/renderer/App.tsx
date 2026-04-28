@@ -19,6 +19,17 @@ export function App() {
     };
   }, [fetchSessions, subscribeToEvents]);
 
+  // Auto-enable translation if API key is configured
+  useEffect(() => {
+    if (typeof window.api?.configureTranslation === 'function') {
+      window.api.configureTranslation({}).then((config) => {
+        if (config.apiKey && !settings.translationEnabled) {
+          updateSettings({ translationEnabled: true });
+        }
+      });
+    }
+  }, []); // run once on mount
+
   const handleSettingsChange = useCallback(
     (newSettings: typeof settings) => {
       updateSettings(newSettings);
