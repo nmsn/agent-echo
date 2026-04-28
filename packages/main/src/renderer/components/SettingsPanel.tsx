@@ -16,7 +16,7 @@ export function SettingsPanel({ settings, onSettingsChange }: SettingsPanelProps
   const [translationConfig, setTranslationConfig] = useState<TranslationConfig>({
     apiKey: '',
     apiBase: 'https://api.minimaxi.com/anthropic',
-    modelName: 'MiniMax-Text-01',
+    modelName: 'MiniMax-M2.7',
   });
 
   useEffect(() => {

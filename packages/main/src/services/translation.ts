@@ -10,7 +10,7 @@ export interface TranslationConfig {
 const DEFAULT_CONFIG: TranslationConfig = {
   apiKey: '',
   apiBase: 'https://api.minimaxi.com/anthropic',
-  modelName: 'MiniMax-Text-01',
+  modelName: 'MiniMax-M2.7',
 };
 
 const SYSTEM_PROMPTS = {

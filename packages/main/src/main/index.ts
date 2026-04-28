@@ -107,7 +107,7 @@ async function initialize(): Promise<void> {
     translationService.configure({
       apiKey: envApiKey,
       apiBase: process.env.MINIMAX_TRANSLATION_API_BASE || 'https://api.minimaxi.com/anthropic',
-      modelName: process.env.MINIMAX_TRANSLATION_MODEL || 'MiniMax-Text-01',
+      modelName: process.env.MINIMAX_TRANSLATION_MODEL || 'MiniMax-M2.7',
     })
     console.log('[Main] Translation service configured from .env')
   }
