@@ -72,7 +72,7 @@ const api = {
   translateRequest: (
     messageId: string,
     text: string,
-    contentType?: 'translate' | 'explain'
+    contentType?: 'translate' | 'explain' | 'compose'
   ): Promise<{ success: boolean; translated?: string; error?: string }> =>
     ipcRenderer.invoke('translate:request', messageId, text, contentType),
   onTranslateResult: (callback: (result: TranslateResult) => void) => {

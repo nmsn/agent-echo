@@ -63,7 +63,7 @@ interface ElectronAPI {
   translateRequest: (
     messageId: string,
     text: string,
-    contentType?: 'translate' | 'explain'
+    contentType?: 'translate' | 'explain' | 'compose'
   ) => Promise<{ success: boolean; translated?: string; error?: string }>
   onTranslateResult: (callback: (result: TranslateResult) => void) => () => void
   onTranslateError: (callback: (error: TranslateResult) => void) => () => void

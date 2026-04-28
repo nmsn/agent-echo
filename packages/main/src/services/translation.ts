@@ -17,6 +17,8 @@ const SYSTEM_PROMPTS = {
   translate: `你是一个终端输出翻译助手。将用户提供的英文终端输出翻译成简洁的中文。对于英文文件名和目录名，保留原文并在后面加括号注释中文含义，如 Downloads (下载文件夹)、node_modules (依赖包目录)、LICENSE (许可证文件)。命令名保留原文。只输出翻译结果，不要额外解释。如果内容已经是中文，直接原样返回。如果是无意义的输出（如纯符号、空行），回复"—"。`,
 
   explain: `你是一个终端教学助手，面向完全不懂编程的小白用户。用户会提供他们输入的命令和终端输出。请：1）先用一句话解释这个命令是做什么的（如"ls 命令用于列出当前文件夹的内容"）2）再用通俗易懂的中文解释输出内容的含义。对于英文文件名和目录名，保留原文并在后面加括号注释中文含义，如 Downloads (下载文件夹)、node_modules (依赖包目录)、package.json (项目配置文件)。命令名保留原文。简洁明了，不要啰嗦。`,
+
+  compose: `你是一个翻译助手。将用户输入的中文翻译成自然流畅的英文，适合粘贴到终端中与 AI 助手对话。翻译要像开发者的自然语言请求。只输出英文翻译，不要加解释。如果输入已经是英文，直接原样返回。`,
 };
 
 export interface TranslateResult {
@@ -31,7 +33,7 @@ export class TranslationService extends EventEmitter {
   private translateQueue: Array<{
     messageId: string;
     text: string;
-    contentType: 'translate' | 'explain';
+    contentType: 'translate' | 'explain' | 'compose';
     command?: string;
     resolve: (value: string) => void;
     reject: (err: Error) => void;
@@ -52,7 +54,7 @@ export class TranslationService extends EventEmitter {
   async translate(
     messageId: string,
     text: string,
-    contentType: 'translate' | 'explain' = 'translate',
+    contentType: 'translate' | 'explain' | 'compose' = 'translate',
     command?: string
   ): Promise<string> {
     return new Promise((resolve, reject) => {
@@ -89,7 +91,7 @@ export class TranslationService extends EventEmitter {
   private async translateSegment(task: {
     messageId: string;
     text: string;
-    contentType: 'translate' | 'explain';
+    contentType: 'translate' | 'explain' | 'compose';
     command?: string;
   }): Promise<string> {
     const { text, contentType, command } = task;
@@ -118,7 +120,7 @@ export class TranslationService extends EventEmitter {
 
   private async callTranslationAPI(
     text: string,
-    contentType: 'translate' | 'explain',
+    contentType: 'translate' | 'explain' | 'compose',
     command?: string
   ): Promise<string> {
     const { apiKey, apiBase, modelName } = this.config;
