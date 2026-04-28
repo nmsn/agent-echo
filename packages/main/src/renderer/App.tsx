@@ -26,9 +26,25 @@ export function App() {
     [updateSettings]
   );
 
-  const handleSpeak = useCallback((content: string) => {
-    // TODO: Implement TTS via IPC to main process
-    console.log('TTS requested:', content);
+  const handleSpeak = useCallback(async (content: string) => {
+    if (!window.api?.speak) {
+      console.log('TTS not available');
+      return;
+    }
+
+    try {
+      const messageId = 'speak-' + Date.now();
+      const result = await window.api.speak(messageId, content);
+      if (result.success && result.audioData) {
+        // Play audio using HTML5 Audio element with data URL
+        const audio = new Audio(result.audioData);
+        await audio.play();
+      } else {
+        console.error('TTS failed:', result.error);
+      }
+    } catch (err) {
+      console.error('TTS error:', err);
+    }
   }, []);
 
   const processCount = sessions.length;

@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useConversationStore } from '../stores/conversation';
 import { MessageItem } from './MessageItem';
 
@@ -11,17 +12,19 @@ export function ChatView({ onSpeak }: ChatViewProps) {
   // Auto-select first session if none is active
   const activeSession = sessions.find((s) => s.id === activeSessionId) || sessions[0];
 
+  // Set as active session if auto-selected (useEffect to avoid setState during render)
+  useEffect(() => {
+    if (!activeSessionId && sessions.length > 0 && activeSession) {
+      setActiveSession(activeSession.id);
+    }
+  }, [activeSessionId, sessions.length, activeSession, setActiveSession]);
+
   if (!activeSession) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <p className="text-muted-foreground">暂无活动会话</p>
       </div>
     );
-  }
-
-  // Set as active session if auto-selected
-  if (!activeSessionId && sessions.length > 0) {
-    setActiveSession(activeSession.id);
   }
 
   return (
