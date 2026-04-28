@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Volume2, Languages, Loader2 } from 'lucide-react';
 import type { ConversationMessage } from '@agentecho/shared';
@@ -19,6 +19,8 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
   const [hovered, setHovered] = useState(false);
   const [translationStatus, setTranslationStatus] = useState<TranslationStatus>('idle');
   const [translatedText, setTranslatedText] = useState<string>('');
+
+  const hasAutoTranslated = useRef(false);
 
   const handleSpeak = () => {
     if (onSpeak) {
@@ -49,6 +51,16 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
     }
   };
 
+  // Auto-translate assistant messages on mount
+  useEffect(() => {
+    if (isUser) return;
+    if (!showTranslation) return;
+    if (hasAutoTranslated.current) return;
+
+    hasAutoTranslated.current = true;
+    handleTranslate();
+  }, [message.id]);
+
   return (
     <div className={`mb-4 flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div
@@ -62,7 +74,7 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
         <div
           className={`relative px-4 py-2.5 text-sm leading-relaxed whitespace-pre-wrap wrap-break-word ${
             isUser
-              ? 'bg-primary text-primary-foreground rounded-2xl rounded-br-md'
+              ? 'bg-primary text-primary-foreground rounded-2xl'
               : 'bg-secondary text-secondary-foreground rounded-2xl rounded-bl-md'
           }`}
         >
@@ -104,7 +116,7 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
         {showCleaned && (
           <div className={`mt-2 px-4 py-2 text-xs leading-relaxed whitespace-pre-wrap wrap-break-word ${
             isUser
-              ? 'bg-primary/50 text-primary-foreground/70 rounded-2xl rounded-br-md'
+              ? 'bg-primary/50 text-primary-foreground/70 rounded-2xl'
               : 'bg-secondary/50 text-secondary-foreground/70 rounded-2xl rounded-bl-md'
           }`}>
             <div className="mb-1.5 border-t border-border/40" />
@@ -114,7 +126,7 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
         {showTranslation && translationStatus === 'translating' && (
           <div className={`mt-2 px-4 py-2 text-xs leading-relaxed whitespace-pre-wrap wrap-break-word ${
             isUser
-              ? 'bg-primary/30 text-primary-foreground/70 rounded-2xl rounded-br-md'
+              ? 'bg-primary/30 text-primary-foreground/70 rounded-2xl'
               : 'bg-secondary/30 text-secondary-foreground/70 rounded-2xl rounded-bl-md'
           }`}>
             <div className="mb-1.5 border-t border-border/40" />
@@ -127,7 +139,7 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
         {showTranslation && translatedText && translationStatus !== 'translating' && (
           <div className={`mt-2 px-4 py-2 text-xs leading-relaxed whitespace-pre-wrap wrap-break-word ${
             isUser
-              ? 'bg-primary/30 text-primary-foreground/70 rounded-2xl rounded-br-md'
+              ? 'bg-primary/30 text-primary-foreground/70 rounded-2xl'
               : 'bg-secondary/30 text-secondary-foreground/70 rounded-2xl rounded-bl-md'
           }`}>
             <div className="mb-1.5 border-t border-border/40" />

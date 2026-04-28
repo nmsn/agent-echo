@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { useConversationStore } from '../stores/conversation';
 import { MessageItem } from './MessageItem';
+import { ComposeBar } from './ComposeBar';
 
 interface ChatViewProps {
   onSpeak?: (content: string) => void;
@@ -47,6 +48,7 @@ export function ChatView({ onSpeak }: ChatViewProps) {
           ))
         )}
       </div>
+      <ComposeBar enabled={settings.translationEnabled} />
     </div>
   );
 }
