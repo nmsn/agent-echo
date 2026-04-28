@@ -13,6 +13,7 @@
     "@agentecho/shared": "workspace:*",
     "@electron-toolkit/utils": "^4.0.0",
     "@tailwindcss/vite": "^4.2.4",
+    "dotenv": "^17.4.2",
     "electron": "28.3.3",
     "electron-log": "^5.2.4",
     "lucide-react": "^1.11.0",
