@@ -136,8 +136,7 @@ export class TranslationService extends EventEmitter {
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
-      'anthropic-version': '2023-06-01',
+      'Authorization': `Bearer ${apiKey}`,
     };
 
     const response = await fetch(`${apiBase}/v1/messages`, {
@@ -145,8 +144,7 @@ export class TranslationService extends EventEmitter {
       headers,
       body: JSON.stringify({
         model: modelName,
-        stream: true,
-        max_tokens: 2048,
+        stream: false,
         messages: [
           { role: 'user', content: systemPrompt + '\n\n' + userContent },
         ],
@@ -167,40 +165,24 @@ export class TranslationService extends EventEmitter {
       throw new Error(errorMessages[response.status] || `API 错误 (${response.status}): ${errorBody}`);
     }
 
-    if (!response.body) {
-      throw new Error('No response body');
+    const data = await response.json();
+
+    // Check for API-level errors in base_resp
+    if (data.base_resp && data.base_resp.status_code !== 0) {
+      throw new Error(`API 错误: ${data.base_resp.status_msg || '未知错误'}`);
     }
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let result = '';
-
-    // Anthropic SSE streaming format
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      const chunk = decoder.decode(value, { stream: true });
-      const lines = chunk.split('\n');
-
-      for (const line of lines) {
-        if (!line.startsWith('data:')) continue;
-        const data = line.slice(5).trim();
-        if (data === '[DONE]') continue;
-
-        try {
-          const parsed = JSON.parse(data);
-          // Anthropic streaming format: type = "content_block_delta"
-          const delta = parsed.content?.[0]?.text || parsed.delta?.text;
-          if (delta) {
-            result += delta;
-          }
-        } catch {
-          // Skip malformed JSON
-        }
-      }
+    // Extract text from Anthropic response format: content is an array of blocks
+    const content = data.content;
+    if (!content || !Array.isArray(content)) {
+      throw new Error('API 返回格式异常：缺少 content');
     }
 
-    return result.trim() || '—';
+    const textBlocks = content
+      .filter((block: { type: string }) => block.type === 'text')
+      .map((block: { text: string }) => block.text)
+      .join('');
+
+    return textBlocks.trim() || '—';
   }
 }

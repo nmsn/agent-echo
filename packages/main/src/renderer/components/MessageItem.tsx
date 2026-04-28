@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Volume2, Languages, Loader2 } from 'lucide-react';
 import type { ConversationMessage } from '@agentecho/shared';
@@ -19,8 +19,6 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
   const [hovered, setHovered] = useState(false);
   const [translationStatus, setTranslationStatus] = useState<TranslationStatus>('idle');
   const [translatedText, setTranslatedText] = useState<string>('');
-
-  const hasAutoTranslated = useRef(false);
 
   const handleSpeak = () => {
     if (onSpeak) {
@@ -50,16 +48,6 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
       setTranslationStatus('error');
     }
   };
-
-  // Auto-translate assistant messages on mount
-  useEffect(() => {
-    if (isUser) return;
-    if (!showTranslation) return;
-    if (hasAutoTranslated.current) return;
-
-    hasAutoTranslated.current = true;
-    handleTranslate();
-  }, [message.id]);
 
   return (
     <div className={`mb-4 flex ${isUser ? 'justify-end' : 'justify-start'}`}>
