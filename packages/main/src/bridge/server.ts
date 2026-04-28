@@ -1,7 +1,7 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { EventEmitter } from 'events';
 import type { SocketMessage, Session, ConversationMessage } from './types';
-import { cleanTerminalOutput } from '@agentecho/shared';
+import { cleanTerminalOutput, stripSystemTags } from '@agentecho/shared';
 
 const HTTP_PORT = 18765;
 const HTTP_URL = `http://localhost:${HTTP_PORT}`;
@@ -162,7 +162,8 @@ export class BridgeServer extends EventEmitter {
     if (!session) return;
 
     const data = event.data || {};
-    const content = (data.text as string) || (data.content as string) || JSON.stringify(data);
+    const rawContent = (data.text as string) || (data.content as string) || JSON.stringify(data);
+    const content = stripSystemTags(rawContent);
 
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('[INPUT] session:', session.id);

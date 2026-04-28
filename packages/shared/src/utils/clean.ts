@@ -137,6 +137,26 @@ export function classifyContent(text: string): ContentClass {
   return 'translate';
 }
 
+// ── System Tag Stripping ──
+const SYSTEM_TAGS = [
+  'ide_opened_file',
+  'system-reminder',
+  'local-command-caveat',
+  'local-command-stdout',
+  'command-name',
+  'command-args',
+  'command-message',
+  'user-prompt-submit-hook',
+];
+
+export function stripSystemTags(text: string): string {
+  for (const tag of SYSTEM_TAGS) {
+    const regex = new RegExp(`<${tag}[^>]*>[\\s\\S]*?<\\/${tag}>`, 'g');
+    text = text.replace(regex, '');
+  }
+  return text.trim();
+}
+
 // ── Main Clean Pipeline ──
 export function cleanTerminalOutput(raw: string): string {
   const cleaned = [stripAnsi, normalizeNewlines, compressBlankLines, stripShellPrompts]
