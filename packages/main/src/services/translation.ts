@@ -25,6 +25,12 @@ export interface TranslateResult {
   messageId: string;
   translated: string;
   error?: string;
+  usage?: { inputTokens: number; outputTokens: number };
+}
+
+interface TranslationResponse {
+  text: string;
+  usage: { inputTokens: number; outputTokens: number };
 }
 
 export class TranslationService extends EventEmitter {
@@ -35,7 +41,7 @@ export class TranslationService extends EventEmitter {
     text: string;
     contentType: 'translate' | 'explain' | 'compose';
     command?: string;
-    resolve: (value: string) => void;
+    resolve: (value: TranslateResult) => void;
     reject: (err: Error) => void;
   }> = [];
 
@@ -56,7 +62,7 @@ export class TranslationService extends EventEmitter {
     text: string,
     contentType: 'translate' | 'explain' | 'compose' = 'translate',
     command?: string
-  ): Promise<string> {
+  ): Promise<TranslateResult> {
     return new Promise((resolve, reject) => {
       this.translateQueue.push({ messageId, text, contentType, command, resolve, reject });
       if (!this.translating) {
@@ -77,7 +83,7 @@ export class TranslationService extends EventEmitter {
     try {
       const result = await this.translateSegment(task);
       task.resolve(result);
-      this.emit('translate:result', { messageId: task.messageId, translated: result });
+      this.emit('translate:result', { messageId: task.messageId, translated: result.translated, usage: result.usage });
     } catch (err) {
       const error = err instanceof Error ? err.message : String(err);
       task.reject(new Error(error));
@@ -93,16 +99,18 @@ export class TranslationService extends EventEmitter {
     text: string;
     contentType: 'translate' | 'explain' | 'compose';
     command?: string;
-  }): Promise<string> {
-    const { text, contentType, command } = task;
+  }): Promise<TranslateResult> {
+    const { messageId, text, contentType, command } = task;
 
     // Split into code/text segments
     const segments = splitCodeAndText(text);
     if (segments.length === 0) {
-      return '';
+      return { messageId, translated: '', usage: { inputTokens: 0, outputTokens: 0 } };
     }
 
     const results: string[] = [];
+    let totalInput = 0;
+    let totalOutput = 0;
 
     for (const seg of segments) {
       if (seg.type === 'code') {
@@ -111,18 +119,24 @@ export class TranslationService extends EventEmitter {
       }
 
       // Text segment — translate it
-      const translated = await this.callTranslationAPI(seg.text, contentType, command);
-      results.push(translated);
+      const response = await this.callTranslationAPI(seg.text, contentType, command);
+      results.push(response.text);
+      totalInput += response.usage.inputTokens;
+      totalOutput += response.usage.outputTokens;
     }
 
-    return results.join('\n');
+    return {
+      messageId,
+      translated: results.join('\n'),
+      usage: { inputTokens: totalInput, outputTokens: totalOutput },
+    };
   }
 
   private async callTranslationAPI(
     text: string,
     contentType: 'translate' | 'explain' | 'compose',
     command?: string
-  ): Promise<string> {
+  ): Promise<TranslationResponse> {
     const { apiKey, apiBase, modelName } = this.config;
 
     if (!apiKey) {
@@ -183,6 +197,14 @@ export class TranslationService extends EventEmitter {
       .map((block: { text: string }) => block.text)
       .join('');
 
-    return textBlocks.trim() || '—';
+    // Extract token usage
+    const usage = data.usage;
+    const inputTokens = usage?.input_tokens || 0;
+    const outputTokens = usage?.output_tokens || 0;
+
+    return {
+      text: textBlocks.trim() || '—',
+      usage: { inputTokens, outputTokens },
+    };
   }
 }

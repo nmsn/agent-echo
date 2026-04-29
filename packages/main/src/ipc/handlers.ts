@@ -40,7 +40,7 @@ export function setupIPCHandlers(
   ipcMain.handle('translate:request', async (_, messageId, text, contentType) => {
     try {
       const result = await translationService.translate(messageId, text, contentType);
-      return { success: true, translated: result };
+      return { success: true, translated: result.translated, usage: result.usage };
     } catch (err) {
       return { success: false, error: err instanceof Error ? err.message : String(err) };
     }

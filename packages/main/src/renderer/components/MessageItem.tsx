@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Volume2, Languages, Loader2 } from 'lucide-react';
 import type { ConversationMessage } from '@agentecho/shared';
+import { useConversationStore } from '../stores/conversation';
 
 interface MessageItemProps {
   message: ConversationMessage;
@@ -19,6 +20,8 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
   const [hovered, setHovered] = useState(false);
   const [translationStatus, setTranslationStatus] = useState<TranslationStatus>('idle');
   const [translatedText, setTranslatedText] = useState<string>('');
+  const [tokenUsage, setTokenUsage] = useState<{ inputTokens: number; outputTokens: number } | null>(null);
+  const addTokenUsage = useConversationStore((s) => s.addTokenUsage);
 
   const handleSpeak = () => {
     if (onSpeak) {
@@ -39,6 +42,10 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
       if (result.success && result.translated) {
         setTranslatedText(result.translated);
         setTranslationStatus('done');
+        if (result.usage) {
+          setTokenUsage(result.usage);
+          addTokenUsage(result.usage.inputTokens, result.usage.outputTokens);
+        }
       } else {
         setTranslatedText(result.error || '翻译失败');
         setTranslationStatus('error');
@@ -132,6 +139,11 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
           }`}>
             <div className="mb-1.5 border-t border-border/40" />
             {translatedText}
+            {tokenUsage && (
+              <div className="mt-1 text-[10px] text-muted-foreground/60">
+                EN {tokenUsage.inputTokens} → CN {tokenUsage.outputTokens} tokens
+              </div>
+            )}
           </div>
         )}
       </div>

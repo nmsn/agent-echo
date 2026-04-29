@@ -7,11 +7,17 @@ export interface Settings {
   translationEnabled: boolean;
 }
 
+interface TokenStats {
+  totalInputTokens: number;   // 翻译消耗的英文 token 总量
+  totalOutputTokens: number;  // 翻译产出的中文 token 总量
+}
+
 interface ConversationState {
   sessions: Session[];
   activeSessionId: string | null;
   settings: Settings;
   isBridgeRunning: boolean;
+  tokenStats: TokenStats;
   addMessage: (sessionId: string, message: ConversationMessage) => void;
   addSession: (session: Session) => void;
   removeSession: (sessionId: string) => void;
@@ -19,6 +25,7 @@ interface ConversationState {
   updateSettings: (settings: Partial<Settings>) => void;
   fetchSessions: () => Promise<void>;
   setBridgeRunning: (running: boolean) => void;
+  addTokenUsage: (inputTokens: number, outputTokens: number) => void;
   subscribeToEvents: () => () => void;
 }
 
@@ -31,6 +38,10 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     translationEnabled: false,
   },
   isBridgeRunning: false,
+  tokenStats: {
+    totalInputTokens: 0,
+    totalOutputTokens: 0,
+  },
   addMessage: (sessionId, message) =>
     set((state) => ({
       sessions: state.sessions.map((s) =>
@@ -66,6 +77,13 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     }
   },
   setBridgeRunning: (running) => set({ isBridgeRunning: running }),
+  addTokenUsage: (inputTokens, outputTokens) =>
+    set((state) => ({
+      tokenStats: {
+        totalInputTokens: state.tokenStats.totalInputTokens + inputTokens,
+        totalOutputTokens: state.tokenStats.totalOutputTokens + outputTokens,
+      },
+    })),
   subscribeToEvents: () => {
     const unsubSessionStart = window.api.onSessionStart((session) => {
       console.log('[Store] Session started:', session.id);
