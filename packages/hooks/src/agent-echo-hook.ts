@@ -312,6 +312,12 @@ async function main() {
     message.agentPid = agentPid || undefined;
     message.pidChain = pidChain.length ? pidChain : undefined;
 
+    // Use stablePid (terminal PID) to distinguish sessions from different terminals
+    // Falls back to pid if stablePid is not available
+    if (stablePid) {
+      message.source = `${message.source}@${stablePid}`;
+    }
+
     // Check headless mode
     if (agentPid) {
       try {
