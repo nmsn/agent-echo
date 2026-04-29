@@ -61,7 +61,7 @@ export function App() {
   const processCount = sessions.length;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="h-screen flex flex-col bg-background overflow-hidden">
       <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
         <h1 className="text-lg font-semibold text-foreground">Agent Echo</h1>
         <button
