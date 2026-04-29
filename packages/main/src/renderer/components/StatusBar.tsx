@@ -9,12 +9,6 @@ export function StatusBar({ isBridgeRunning, processCount }: StatusBarProps) {
   const { totalInputTokens, totalOutputTokens } = useConversationStore((s) => s.tokenStats);
 
   const hasTokens = totalInputTokens > 0;
-  // EN (input) typically uses fewer tokens than CN (output)
-  // Savings = how many tokens saved by using English instead of Chinese
-  const savedTokens = totalOutputTokens - totalInputTokens;
-  const savedPercent = hasTokens && totalOutputTokens > 0
-    ? Math.round((savedTokens / totalOutputTokens) * 100)
-    : 0;
 
   return (
     <div className="flex items-center justify-between px-4 py-2 bg-secondary text-sm">
@@ -28,12 +22,7 @@ export function StatusBar({ isBridgeRunning, processCount }: StatusBarProps) {
         <span>Claude Code 进程: {processCount}</span>
         {hasTokens && (
           <span>
-            EN {totalInputTokens.toLocaleString()} / CN {totalOutputTokens.toLocaleString()} tokens
-            {savedTokens > 0 && (
-              <span className="text-green-500 ml-1">
-                (用英文省 {savedTokens.toLocaleString()} tokens, {savedPercent}%)
-              </span>
-            )}
+            翻译: 请求 {totalInputTokens.toLocaleString()} · 响应 {totalOutputTokens.toLocaleString()} tokens
           </span>
         )}
       </div>

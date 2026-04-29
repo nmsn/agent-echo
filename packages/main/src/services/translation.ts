@@ -25,18 +25,17 @@ export interface TranslateResult {
   messageId: string;
   translated: string;
   error?: string;
-  usage?: { inputTokens: number; outputTokens: number; systemPromptTokens: number };
+  usage?: { inputTokens: number; outputTokens: number };
 }
 
 interface TranslationResponse {
   text: string;
-  usage: { inputTokens: number; outputTokens: number; systemPromptTokens: number };
+  usage: { inputTokens: number; outputTokens: number };
 }
 
 export class TranslationService extends EventEmitter {
   private config: TranslationConfig = { ...DEFAULT_CONFIG };
   private translating = false;
-  private systemPromptTokensCache: Partial<Record<'translate' | 'explain' | 'compose', number>> = {};
   private translateQueue: Array<{
     messageId: string;
     text: string;
@@ -48,55 +47,6 @@ export class TranslationService extends EventEmitter {
 
   configure(config: Partial<TranslationConfig>): void {
     this.config = { ...this.config, ...config };
-    // Reset cache when config changes
-    this.systemPromptTokensCache = {};
-  }
-
-  async initSystemPromptTokens(): Promise<void> {
-    if (!this.config.apiKey) return;
-
-    const contentTypes = ['translate', 'explain', 'compose'] as const;
-    for (const contentType of contentTypes) {
-      try {
-        const systemPrompt = SYSTEM_PROMPTS[contentType];
-        const response = await this.callRawAPI(systemPrompt + '\n\n .');
-        if (response.usage) {
-          this.systemPromptTokensCache[contentType] = response.usage.inputTokens;
-        }
-      } catch (err) {
-        console.error(`[TranslationService] Failed to init system prompt tokens for ${contentType}:`, err);
-      }
-    }
-  }
-
-  private async callRawAPI(content: string): Promise<{ usage: { inputTokens: number; outputTokens: number } }> {
-    const { apiKey, apiBase, modelName } = this.config;
-
-    const response = await fetch(`${apiBase}/v1/messages`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: modelName,
-        stream: false,
-        messages: [{ role: 'user', content }],
-      }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    const usage = data.usage;
-    return {
-      usage: {
-        inputTokens: usage?.input_tokens || 0,
-        outputTokens: usage?.output_tokens || 0,
-      },
-    };
   }
 
   getConfig(): TranslationConfig {
@@ -155,7 +105,7 @@ export class TranslationService extends EventEmitter {
     // Split into code/text segments
     const segments = splitCodeAndText(text);
     if (segments.length === 0) {
-      return { messageId, translated: '', usage: { inputTokens: 0, outputTokens: 0, systemPromptTokens: 0 } };
+      return { messageId, translated: '', usage: { inputTokens: 0, outputTokens: 0 } };
     }
 
     const results: string[] = [];
@@ -175,12 +125,10 @@ export class TranslationService extends EventEmitter {
       totalOutput += response.usage.outputTokens;
     }
 
-    const systemPromptTokens = this.systemPromptTokensCache[contentType] || 0;
-
     return {
       messageId,
       translated: results.join('\n'),
-      usage: { inputTokens: totalInput, outputTokens: totalOutput, systemPromptTokens },
+      usage: { inputTokens: totalInput, outputTokens: totalOutput },
     };
   }
 
@@ -254,11 +202,9 @@ export class TranslationService extends EventEmitter {
     const inputTokens = usage?.input_tokens || 0;
     const outputTokens = usage?.output_tokens || 0;
 
-    const systemPromptTokens = this.systemPromptTokensCache[contentType] || 0;
-
     return {
       text: textBlocks.trim() || '—',
-      usage: { inputTokens, outputTokens, systemPromptTokens },
+      usage: { inputTokens, outputTokens },
     };
   }
 }
