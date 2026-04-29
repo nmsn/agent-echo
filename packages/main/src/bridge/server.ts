@@ -73,6 +73,8 @@ export class BridgeServer extends EventEmitter {
     const { event, source: rawSource, pid, cwd } = message;
     const source = (rawSource ?? 'claude').trim();
 
+    console.log('[BridgeServer] Received:', event.type, 'source:', source, 'sessionId:', event.sessionId, 'pid:', pid);
+
     switch (event.type) {
       case 'SessionStart':
         this.handleSessionStart(event, source, pid, undefined, cwd);
@@ -154,12 +156,10 @@ export class BridgeServer extends EventEmitter {
     const sessionId = event.sessionId;
     let session = sessionId ? this.sessions.get(sessionId) : undefined;
     if (!session) {
-      session = this.findSession(source);
+      // sessionId was provided but not found — do not fall back to findSession
+      // (would mix messages from different Claude Code processes into wrong session)
+      return;
     }
-    if (!session) {
-      session = this.createSession(sessionId, source, pid, undefined, cwd);
-    }
-    if (!session) return;
 
     const data = event.data || {};
     const rawContent = (data.text as string) || (data.content as string) || JSON.stringify(data);
@@ -201,12 +201,6 @@ export class BridgeServer extends EventEmitter {
   private handleStop(event: SocketMessage['event'], source: string): void {
     const sessionId = event.sessionId;
     let session = sessionId ? this.sessions.get(sessionId) : undefined;
-    if (!session) {
-      session = this.findSession(source);
-    }
-    if (!session) {
-      session = this.createSession(sessionId, source);
-    }
     if (!session) return;
 
     const data = event.data || {};
@@ -235,12 +229,6 @@ export class BridgeServer extends EventEmitter {
   private handlePostToolUse(event: SocketMessage['event'], source: string): void {
     const sessionId = event.sessionId;
     let session = sessionId ? this.sessions.get(sessionId) : undefined;
-    if (!session) {
-      session = this.findSession(source);
-    }
-    if (!session) {
-      session = this.createSession(sessionId, source);
-    }
     if (!session) return;
 
     const data = event.data || {};
@@ -268,12 +256,6 @@ export class BridgeServer extends EventEmitter {
   private handlePostToolUseFailure(event: SocketMessage['event'], source: string): void {
     const sessionId = event.sessionId;
     let session = sessionId ? this.sessions.get(sessionId) : undefined;
-    if (!session) {
-      session = this.findSession(source);
-    }
-    if (!session) {
-      session = this.createSession(sessionId, source);
-    }
     if (!session) return;
 
     const data = event.data || {};
