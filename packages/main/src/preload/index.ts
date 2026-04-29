@@ -73,7 +73,7 @@ const api = {
     messageId: string,
     text: string,
     contentType?: 'translate' | 'explain' | 'compose'
-  ): Promise<{ success: boolean; translated?: string; usage?: { inputTokens: number; outputTokens: number }; error?: string }> =>
+  ): Promise<{ success: boolean; translated?: string; usage?: { inputTokens: number; outputTokens: number; systemPromptTokens: number }; error?: string }> =>
     ipcRenderer.invoke('translate:request', messageId, text, contentType),
   onTranslateResult: (callback: (result: TranslateResult) => void) => {
     const listener = (_: Electron.IpcRendererEvent, result: TranslateResult) => callback(result)

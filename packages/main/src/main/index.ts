@@ -110,6 +110,13 @@ async function initialize(): Promise<void> {
       modelName: process.env.MINIMAX_TRANSLATION_MODEL || 'MiniMax-M2.7',
     })
     console.log('[Main] Translation service configured from .env')
+
+    // Pre-calculate system prompt tokens for accurate user text token tracking
+    translationService.initSystemPromptTokens().then(() => {
+      console.log('[Main] System prompt tokens initialized')
+    }).catch(err => {
+      console.error('[Main] Failed to initialize system prompt tokens:', err)
+    })
   }
 
   // Apply .env TTS config if set

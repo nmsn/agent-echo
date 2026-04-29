@@ -64,7 +64,7 @@ interface ElectronAPI {
     messageId: string,
     text: string,
     contentType?: 'translate' | 'explain' | 'compose'
-  ) => Promise<{ success: boolean; translated?: string; usage?: { inputTokens: number; outputTokens: number }; error?: string }>
+  ) => Promise<{ success: boolean; translated?: string; usage?: { inputTokens: number; outputTokens: number; systemPromptTokens: number }; error?: string }>
   onTranslateResult: (callback: (result: TranslateResult) => void) => () => void
   onTranslateError: (callback: (error: TranslateResult) => void) => () => void
   configureTTS: (config: Partial<TTSConfig>) => Promise<TTSConfig>

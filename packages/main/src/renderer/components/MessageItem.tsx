@@ -20,7 +20,7 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
   const [hovered, setHovered] = useState(false);
   const [translationStatus, setTranslationStatus] = useState<TranslationStatus>('idle');
   const [translatedText, setTranslatedText] = useState<string>('');
-  const [tokenUsage, setTokenUsage] = useState<{ inputTokens: number; outputTokens: number } | null>(null);
+  const [tokenUsage, setTokenUsage] = useState<{ inputTokens: number; outputTokens: number; systemPromptTokens: number } | null>(null);
   const addTokenUsage = useConversationStore((s) => s.addTokenUsage);
 
   const handleSpeak = () => {
@@ -44,7 +44,8 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
         setTranslationStatus('done');
         if (result.usage) {
           setTokenUsage(result.usage);
-          addTokenUsage(result.usage.inputTokens, result.usage.outputTokens);
+          const userTextTokens = result.usage.inputTokens - result.usage.systemPromptTokens;
+          addTokenUsage(userTextTokens, result.usage.outputTokens);
         }
       } else {
         setTranslatedText(result.error || '翻译失败');
@@ -141,7 +142,7 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
             {translatedText}
             {tokenUsage && (
               <div className="mt-1 text-[10px] text-muted-foreground/60">
-                EN {tokenUsage.inputTokens} → CN {tokenUsage.outputTokens} tokens
+                EN {tokenUsage.inputTokens - tokenUsage.systemPromptTokens} → CN {tokenUsage.outputTokens} tokens
               </div>
             )}
           </div>
