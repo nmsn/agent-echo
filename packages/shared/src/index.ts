@@ -1,7 +1,13 @@
 export type HookEventType =
   | 'SessionStart'
   | 'UserPromptSubmit'
-  | 'SessionEnd';
+  | 'SessionEnd'
+  | 'PreToolUse'
+  | 'PostToolUse'
+  | 'PostToolUseFailure'
+  | 'Stop'
+  | 'SubagentStart'
+  | 'SubagentStop';
 
 export interface HookEvent {
   type: HookEventType;
@@ -19,6 +25,9 @@ export interface Session {
   messages: ConversationMessage[];
   startedAt: number;
   lastActivity: number;
+  status: 'active' | 'ended';
+  endedAt?: number;
+  sessionTitle?: string;
 }
 
 export interface ConversationMessage {
