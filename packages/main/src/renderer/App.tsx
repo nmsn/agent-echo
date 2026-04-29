@@ -1,8 +1,10 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useConversationStore } from './stores/conversation';
 import { ChatView } from './components/ChatView';
+import { ComposeBar } from './components/ComposeBar';
 import { SettingsPanel } from './components/SettingsPanel';
 import { StatusBar } from './components/StatusBar';
+import { TabBar } from './components/TabBar';
 
 export function App() {
   const { settings, updateSettings, sessions, isBridgeRunning, fetchSessions, subscribeToEvents } = useConversationStore();
@@ -58,7 +60,7 @@ export function App() {
     }
   }, []);
 
-  const processCount = sessions.length;
+  const activeCount = sessions.filter((s) => s.status === 'active').length;
 
   return (
     <div className="h-screen flex flex-col bg-background overflow-hidden">
@@ -72,15 +74,18 @@ export function App() {
         </button>
       </header>
 
-      <StatusBar isBridgeRunning={isBridgeRunning} processCount={processCount} />
+      <TabBar />
+
+      <StatusBar isBridgeRunning={isBridgeRunning} activeCount={activeCount} totalCount={sessions.length} />
 
       {showSettings && (
         <SettingsPanel settings={settings} onSettingsChange={handleSettingsChange} />
       )}
 
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 overflow-y-auto">
         <ChatView onSpeak={handleSpeak} />
       </main>
+      <ComposeBar enabled={settings.translationEnabled} />
     </div>
   );
 }
