@@ -1,10 +1,15 @@
 import { createServer, IncomingMessage, ServerResponse } from 'http';
 import { EventEmitter } from 'events';
+import fs from 'fs';
+import path from 'path';
+import os from 'os';
 import type { SocketMessage, Session, ConversationMessage } from './types';
 import { cleanTerminalOutput, stripSystemTags } from '@agentecho/shared';
 
 const HTTP_PORT = 18765;
 const HTTP_URL = `http://localhost:${HTTP_PORT}`;
+const STORAGE_DIR = path.join(os.homedir(), '.agent-echo');
+const STORAGE_PATH = path.join(STORAGE_DIR, 'sessions.json');
 
 export class BridgeServer extends EventEmitter {
   private server: ReturnType<typeof createServer> | null = null;
@@ -13,6 +18,7 @@ export class BridgeServer extends EventEmitter {
 
   start(): Promise<void> {
     return new Promise((resolve, reject) => {
+      this.loadSessions();
       this.server = createServer((req: IncomingMessage, res: ServerResponse) => {
         this.handleRequest(req, res);
       });
@@ -28,12 +34,46 @@ export class BridgeServer extends EventEmitter {
 
   stop(): void {
     this.server?.close();
+    this.saveSessions();
     this.sessions.clear();
     this.running = false;
   }
 
   isRunning(): boolean {
     return this.running;
+  }
+
+  private saveTimer: ReturnType<typeof setTimeout> | null = null;
+
+  private scheduleSave(): void {
+    if (this.saveTimer) clearTimeout(this.saveTimer);
+    this.saveTimer = setTimeout(() => this.saveSessions(), 1000);
+  }
+
+  private saveSessions(): void {
+    try {
+      if (!fs.existsSync(STORAGE_DIR)) {
+        fs.mkdirSync(STORAGE_DIR, { recursive: true });
+      }
+      const data = Array.from(this.sessions.values());
+      fs.writeFileSync(STORAGE_PATH, JSON.stringify(data, null, 2), 'utf8');
+    } catch (err) {
+      console.error('[BridgeServer] Failed to save sessions:', (err as Error).message);
+    }
+  }
+
+  private loadSessions(): void {
+    try {
+      if (!fs.existsSync(STORAGE_PATH)) return;
+      const raw = fs.readFileSync(STORAGE_PATH, 'utf8');
+      const data: Session[] = JSON.parse(raw);
+      for (const session of data) {
+        this.sessions.set(session.id, session);
+      }
+      console.log(`[BridgeServer] Loaded ${data.length} sessions from storage`);
+    } catch (err) {
+      console.error('[BridgeServer] Failed to load sessions:', (err as Error).message);
+    }
   }
 
   private handleRequest(req: IncomingMessage, res: ServerResponse): void {
@@ -70,12 +110,12 @@ export class BridgeServer extends EventEmitter {
   }
 
   private handleMessage(message: SocketMessage): void {
-    const { event, source: rawSource, pid, cwd } = message;
+    const { event, source: rawSource, pid, cwd, editor, agentPid, pidChain } = message;
     const source = (rawSource ?? 'claude').trim();
 
     switch (event.type) {
       case 'SessionStart':
-        this.handleSessionStart(event, source, pid, undefined, cwd);
+        this.handleSessionStart(event, source, pid, undefined, cwd, editor, agentPid, pidChain);
         break;
       case 'UserPromptSubmit':
         this.handleUserPrompt(event, source, pid, cwd);
@@ -100,7 +140,10 @@ export class BridgeServer extends EventEmitter {
     source: string,
     pid?: number,
     tty?: string,
-    cwd?: string
+    cwd?: string,
+    editor?: string,
+    agentPid?: number,
+    pidChain?: number[]
   ): void {
     const sessionId = event.sessionId || `session_${Date.now()}`;
     const session: Session = {
@@ -109,15 +152,18 @@ export class BridgeServer extends EventEmitter {
       pid,
       tty,
       cwd,
-      editor: undefined,
-      agentPid: undefined,
+      editor,
+      agentPid,
+      pidChain,
       messages: [],
       startedAt: event.timestamp || Date.now(),
       lastActivity: event.timestamp || Date.now(),
       sessionTitle: undefined,
       headless: undefined,
+      status: 'active',
     };
     this.sessions.set(sessionId, session);
+    this.scheduleSave();
     this.emit('session:start', session);
   }
 
@@ -126,7 +172,10 @@ export class BridgeServer extends EventEmitter {
     source: string,
     pid?: number,
     tty?: string,
-    cwd?: string
+    cwd?: string,
+    editor?: string,
+    agentPid?: number,
+    pidChain?: number[]
   ): Session | undefined {
     if (!sessionId) {
       sessionId = `session_${Date.now()}`;
@@ -137,15 +186,18 @@ export class BridgeServer extends EventEmitter {
       pid,
       tty,
       cwd,
-      editor: undefined,
-      agentPid: undefined,
+      editor,
+      agentPid,
+      pidChain,
       messages: [],
       startedAt: Date.now(),
       lastActivity: Date.now(),
       sessionTitle: undefined,
       headless: undefined,
+      status: 'active',
     };
     this.sessions.set(sessionId, session);
+    this.scheduleSave();
     this.emit('session:start', session);
     return session;
   }
@@ -153,12 +205,7 @@ export class BridgeServer extends EventEmitter {
   private handleUserPrompt(event: SocketMessage['event'], source: string, pid?: number, cwd?: string): void {
     const sessionId = event.sessionId;
 
-    // Only skip if sessionId was explicitly provided but not found in map
-    // (avoids mixing messages from different Claude Code processes)
-    if (sessionId && !this.sessions.has(sessionId)) {
-      return;
-    }
-
+    // Try sessionId first, then source-based fallback, then create new session
     let session = sessionId ? this.sessions.get(sessionId) : undefined;
     if (!session) {
       session = this.findSession(source);
@@ -187,6 +234,7 @@ export class BridgeServer extends EventEmitter {
 
     session.messages.push(msg);
     session.lastActivity = event.timestamp || Date.now();
+    this.scheduleSave();
     this.emit('message:user', msg, session);
   }
 
@@ -202,14 +250,16 @@ export class BridgeServer extends EventEmitter {
     if (!session) return;
 
     session.lastActivity = event.timestamp || Date.now();
+    session.status = 'ended';
+    session.endedAt = Date.now();
+    this.scheduleSave();
     this.emit('session:end', session);
   }
 
   private handleStop(event: SocketMessage['event'], source: string): void {
     const sessionId = event.sessionId;
 
-    if (sessionId && !this.sessions.has(sessionId)) return;
-
+    // Try sessionId first, then source-based fallback
     let session = sessionId ? this.sessions.get(sessionId) : undefined;
     if (!session) {
       session = this.findSession(source);
@@ -235,14 +285,13 @@ export class BridgeServer extends EventEmitter {
 
       session.messages.push(msg);
       session.lastActivity = event.timestamp || Date.now();
+      this.scheduleSave();
       this.emit('message:assistant', msg, session);
     }
   }
 
   private handlePostToolUse(event: SocketMessage['event'], source: string): void {
     const sessionId = event.sessionId;
-
-    if (sessionId && !this.sessions.has(sessionId)) return;
 
     let session = sessionId ? this.sessions.get(sessionId) : undefined;
     if (!session) {
@@ -269,13 +318,12 @@ export class BridgeServer extends EventEmitter {
 
     session.messages.push(msg);
     session.lastActivity = event.timestamp || Date.now();
+    this.scheduleSave();
     this.emit('message:assistant', msg, session);
   }
 
   private handlePostToolUseFailure(event: SocketMessage['event'], source: string): void {
     const sessionId = event.sessionId;
-
-    if (sessionId && !this.sessions.has(sessionId)) return;
 
     let session = sessionId ? this.sessions.get(sessionId) : undefined;
     if (!session) {
@@ -302,6 +350,7 @@ export class BridgeServer extends EventEmitter {
 
     session.messages.push(msg);
     session.lastActivity = event.timestamp || Date.now();
+    this.scheduleSave();
     this.emit('message:assistant', msg, session);
   }
 

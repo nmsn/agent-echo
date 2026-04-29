@@ -3,6 +3,7 @@ import type { BridgeServer } from '../bridge/server';
 import type { NotificationService } from '../services/notifier';
 import type { TranslationService } from '../services/translation';
 import type { TTSService } from '../services/tts';
+import { focusTerminal } from '../services/focus-terminal';
 
 export function setupIPCHandlers(
   bridgeServer: BridgeServer,
@@ -91,5 +92,14 @@ export function setupIPCHandlers(
 
   bridgeServer.on('message:assistant', (message, session) => {
     mainWindow?.webContents.send('message:assistant', message, session.id);
+  });
+
+  // Focus terminal
+  ipcMain.handle('focus-terminal', async (_, sessionId: string) => {
+    const sessions = bridgeServer.getSessions();
+    const session = sessions.find((s) => s.id === sessionId);
+    if (!session) return { success: false, error: 'Session not found' };
+    await focusTerminal(session.pid, session.pidChain, session.editor);
+    return { success: true };
   });
 }

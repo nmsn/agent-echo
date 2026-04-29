@@ -2,10 +2,11 @@ import { useConversationStore } from '../stores/conversation';
 
 interface StatusBarProps {
   isBridgeRunning: boolean;
-  processCount: number;
+  activeCount: number;
+  totalCount: number;
 }
 
-export function StatusBar({ isBridgeRunning, processCount }: StatusBarProps) {
+export function StatusBar({ isBridgeRunning, activeCount, totalCount }: StatusBarProps) {
   const { totalInputTokens, totalOutputTokens } = useConversationStore((s) => s.tokenStats);
 
   const hasTokens = totalInputTokens > 0;
@@ -19,7 +20,7 @@ export function StatusBar({ isBridgeRunning, processCount }: StatusBarProps) {
         </span>
       </div>
       <div className="text-muted-foreground flex items-center gap-3">
-        <span>Claude Code 进程: {processCount}</span>
+        <span>会话: {activeCount} / {totalCount}</span>
         {hasTokens && (
           <span>
             翻译: 请求 {totalInputTokens.toLocaleString()} · 响应 {totalOutputTokens.toLocaleString()} tokens

@@ -49,6 +49,9 @@ export interface Session {
   lastActivity: number;
   sessionTitle?: string;
   headless?: boolean;
+  status: 'active' | 'ended';
+  endedAt?: number;
+  pidChain?: number[];
 }
 
 export interface ConversationMessage {

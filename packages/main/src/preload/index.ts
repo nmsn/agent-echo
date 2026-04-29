@@ -19,6 +19,9 @@ interface Session {
   lastActivity: number
   sessionTitle?: string
   headless?: boolean
+  status: 'active' | 'ended'
+  endedAt?: number
+  pidChain?: number[]
 }
 
 interface ConversationMessage {
@@ -118,6 +121,10 @@ const api = {
     ipcRenderer.on('message:assistant', listener)
     return () => ipcRenderer.removeListener('message:assistant', listener)
   },
+
+  // Focus terminal
+  focusTerminal: (sessionId: string): Promise<{ success: boolean; error?: string }> =>
+    ipcRenderer.invoke('focus-terminal', sessionId),
 }
 
 if (process.contextIsolated) {

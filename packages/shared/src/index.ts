@@ -28,6 +28,9 @@ export interface Session {
   status: 'active' | 'ended';
   endedAt?: number;
   sessionTitle?: string;
+  editor?: string;
+  agentPid?: number;
+  pidChain?: number[];
 }
 
 export interface ConversationMessage {

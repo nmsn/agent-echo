@@ -289,7 +289,7 @@ async function main() {
     event: {
       type: finalEventName,
       timestamp: (payload.timestamp as number) || Date.now(),
-      sessionId: (payload.session_id as string) || 'default',
+      sessionId: (payload.session_id as string) || `${(payload.source as string) || 'claude'}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
       data: payload,
     },
     source: (payload.source as string) || (payload.reason as string) || 'claude',

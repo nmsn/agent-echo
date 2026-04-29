@@ -16,8 +16,7 @@ type TranslationStatus = 'idle' | 'translating' | 'done' | 'error';
 export function MessageItem({ message, sessionId, showTranslation, onSpeak }: MessageItemProps) {
   const isUser = message.role === 'user';
   const shortSessionId = sessionId.length > 8 ? sessionId.slice(0, 8) + '…' : sessionId;
-  const showCleaned = !!message.cleaned;
-  const [hovered, setHovered] = useState(false);
+    const [hovered, setHovered] = useState(false);
   const [translationStatus, setTranslationStatus] = useState<TranslationStatus>('idle');
   const [translatedText, setTranslatedText] = useState<string>('');
   const [tokenUsage, setTokenUsage] = useState<{ inputTokens: number; outputTokens: number } | null>(null);
@@ -108,16 +107,6 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
             )}
           </AnimatePresence>
         </div>
-        {showCleaned && (
-          <div className={`mt-2 px-4 py-2 text-xs leading-relaxed whitespace-pre-wrap wrap-break-word ${
-            isUser
-              ? 'bg-primary/50 text-primary-foreground/70 rounded-2xl'
-              : 'bg-secondary/50 text-secondary-foreground/70 rounded-2xl rounded-bl-md'
-          }`}>
-            <div className="mb-1.5 border-t border-border/40" />
-            {message.cleaned}
-          </div>
-        )}
         {showTranslation && translationStatus === 'translating' && (
           <div className={`mt-2 px-4 py-2 text-xs leading-relaxed whitespace-pre-wrap wrap-break-word ${
             isUser

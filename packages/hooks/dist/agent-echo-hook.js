@@ -241,7 +241,7 @@ async function main() {
         event: {
             type: finalEventName,
             timestamp: payload.timestamp || Date.now(),
-            sessionId: payload.session_id || 'default',
+            sessionId: payload.session_id || `${payload.source || 'claude'}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
             data: payload,
         },
         source: payload.source || payload.reason || 'claude',
