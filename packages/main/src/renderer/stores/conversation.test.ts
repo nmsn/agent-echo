@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { useConversationStore } from './conversation';
 import type { Session } from '@agentecho/shared';
@@ -100,5 +101,19 @@ describe('conversation store - tab operations', () => {
     const { sessions } = useConversationStore.getState();
     expect(sessions[0].messages).toHaveLength(1);
     expect(sessions[0].messages[0].content).toBe('hello');
+  });
+
+  it('fetchSessions filters out ended sessions', async () => {
+    const activeSession = makeSession({ id: 'active', status: 'active' });
+    const endedSession = makeSession({ id: 'ended', status: 'ended' });
+    (window as any).api = {
+      getSessions: vi.fn().mockResolvedValue([activeSession, endedSession]),
+      getBridgeStatus: vi.fn().mockResolvedValue(true),
+    };
+
+    await useConversationStore.getState().fetchSessions();
+    const { sessions } = useConversationStore.getState();
+    expect(sessions).toHaveLength(1);
+    expect(sessions[0].id).toBe('active');
   });
 });

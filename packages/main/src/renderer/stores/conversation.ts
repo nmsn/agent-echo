@@ -61,7 +61,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
       sessions: state.sessions.filter((s) => s.id !== sessionId),
       activeSessionId:
         state.activeSessionId === sessionId
-          ? state.sessions[0]?.id || null
+          ? state.sessions.find((s) => s.id !== sessionId)?.id || null
           : state.activeSessionId,
     })),
   setActiveSession: (id) => set({ activeSessionId: id }),
@@ -71,7 +71,8 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     try {
       const sessions = await window.api.getSessions();
       const isRunning = await window.api.getBridgeStatus();
-      set({ sessions, isBridgeRunning: isRunning });
+      const activeSessions = sessions.filter((s) => s.status === 'active');
+      set({ sessions: activeSessions, isBridgeRunning: isRunning });
     } catch (err) {
       console.error('[Store] Failed to fetch sessions:', err);
     }
@@ -88,10 +89,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     const unsubSessionStart = window.api.onSessionStart((session) => {
       console.log('[Store] Session started:', session.id);
       get().addSession(session);
-      // Auto-select if no active session
-      if (!get().activeSessionId) {
-        get().setActiveSession(session.id);
-      }
+      get().setActiveSession(session.id);
     });
 
     const unsubSessionEnd = window.api.onSessionEnd((session) => {
