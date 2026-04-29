@@ -13,7 +13,10 @@
     "hooks:uninstall": "node scripts/hooks/uninstall.js"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "electron-vite": "^5.0.0",
+    "jsdom": "^29.1.0",
     "tsx": "^4.21.0"
   }
 }
