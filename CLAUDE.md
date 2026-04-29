@@ -58,6 +58,10 @@ pnpm hooks:uninstall  # 卸载 hooks
 
 ## 项目规范
 
+### 禁止启动项目
+
+**不要运行 `pnpm dev` 或任何启动 Electron 应用的命令。** 用户会自行启动项目。Agent 只负责代码修改、构建验证和提交，不负责运行应用。
+
 ### 导入规范
 
 ESM 项目使用 bundler (electron-vite)，**不要在导入时使用 `.js` 后缀**:
