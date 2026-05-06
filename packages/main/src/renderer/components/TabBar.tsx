@@ -33,6 +33,10 @@ export function TabBar() {
           session.source;
         const end = session.endedAt ?? now;
         const duration = formatDuration(end - session.startedAt);
+        const lastMsg = session.messages[session.messages.length - 1];
+        const isRunning =
+          session.status === 'active' && lastMsg?.role === 'user';
+
         return (
           <button
             key={session.id}
@@ -45,7 +49,14 @@ export function TabBar() {
             }`}
             onClick={() => setActiveSession(session.id)}
           >
-            <span className="truncate">{label}</span>
+            <span className="flex items-center gap-2 min-w-0">
+              <span
+                className={`w-2 h-2 rounded-full shrink-0 ${
+                  isRunning ? 'bg-green-500' : 'bg-gray-400'
+                }`}
+              />
+              <span className="truncate">{label}</span>
+            </span>
             <span className="shrink-0 ml-2 text-xs opacity-60">{duration}</span>
           </button>
         );
