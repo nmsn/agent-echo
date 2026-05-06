@@ -94,6 +94,10 @@ export function setupIPCHandlers(
     mainWindow?.webContents.send('message:assistant', message, session.id);
   });
 
+  bridgeServer.on('session:removed', (sessionId: string) => {
+    mainWindow?.webContents.send('session:removed', sessionId);
+  });
+
   // Focus terminal
   ipcMain.handle('focus-terminal', async (_, sessionId: string) => {
     const sessions = bridgeServer.getSessions();

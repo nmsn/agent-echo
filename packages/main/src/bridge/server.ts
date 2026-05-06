@@ -11,10 +11,24 @@ const HTTP_URL = `http://localhost:${HTTP_PORT}`;
 const STORAGE_DIR = path.join(os.homedir(), '.agent-echo');
 const STORAGE_PATH = path.join(STORAGE_DIR, 'sessions.json');
 
+const STALE_CLEANUP_INTERVAL = 10_000; // 10s
+const SESSION_STALE_MS = 10 * 60 * 1000; // 10 min
+const WORKING_STALE_MS = 5 * 60 * 1000; // 5 min
+
+function isProcessAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (e: any) {
+    return e.code === 'EPERM';
+  }
+}
+
 export class BridgeServer extends EventEmitter {
   private server: ReturnType<typeof createServer> | null = null;
   private sessions: Map<string, Session> = new Map();
   private running = false;
+  private cleanupTimer: ReturnType<typeof setInterval> | null = null;
 
   start(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -26,6 +40,7 @@ export class BridgeServer extends EventEmitter {
       this.server.on('error', reject);
       this.server.listen(HTTP_PORT, () => {
         this.running = true;
+        this.cleanupTimer = setInterval(() => this.cleanStaleSessions(), STALE_CLEANUP_INTERVAL);
         console.log(`[BridgeServer] Listening on ${HTTP_URL}`);
         resolve();
       });
@@ -33,6 +48,10 @@ export class BridgeServer extends EventEmitter {
   }
 
   stop(): void {
+    if (this.cleanupTimer) {
+      clearInterval(this.cleanupTimer);
+      this.cleanupTimer = null;
+    }
     this.server?.close();
     this.saveSessions();
     this.sessions.clear();
@@ -352,6 +371,52 @@ export class BridgeServer extends EventEmitter {
     session.lastActivity = event.timestamp || Date.now();
     this.scheduleSave();
     this.emit('message:assistant', msg, session);
+  }
+
+  private cleanStaleSessions(): void {
+    const now = Date.now();
+    for (const [id, session] of this.sessions) {
+      if (session.status === 'ended') continue;
+
+      const age = now - session.lastActivity;
+
+      // Rule 1: PID dead → remove immediately
+      if (session.pid && !isProcessAlive(session.pid)) {
+        console.log(`[BridgeServer] Stale session (pid ${session.pid} dead): ${id}`);
+        this.removeSession(id);
+        continue;
+      }
+
+      // Rule 2: Agent PID dead → remove immediately
+      if (session.agentPid && !isProcessAlive(session.agentPid)) {
+        console.log(`[BridgeServer] Stale session (agentPid ${session.agentPid} dead): ${id}`);
+        this.removeSession(id);
+        continue;
+      }
+
+      // Rule 3: Active session idle > 10 min → mark ended
+      if (session.status === 'active' && age > SESSION_STALE_MS) {
+        console.log(`[BridgeServer] Stale session (idle ${Math.round(age / 1000)}s): ${id}`);
+        this.removeSession(id);
+        continue;
+      }
+
+      // Rule 4: Active session idle > 5 min, force downgrade
+      if (session.status === 'active' && age > WORKING_STALE_MS) {
+        session.lastActivity = session.lastActivity; // no-op, just noting the threshold
+      }
+    }
+  }
+
+  private removeSession(id: string): void {
+    const session = this.sessions.get(id);
+    if (!session) return;
+    session.status = 'ended';
+    session.endedAt = Date.now();
+    this.sessions.delete(id);
+    this.scheduleSave();
+    this.emit('session:removed', id);
+    console.log(`[BridgeServer] Removed session: ${id}`);
   }
 
   private findSession(source: string): Session | undefined {

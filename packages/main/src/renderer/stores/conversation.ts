@@ -97,6 +97,11 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
       get().removeSession(session.id);
     });
 
+    const unsubSessionRemoved = window.api.onSessionRemoved((sessionId) => {
+      console.log('[Store] Session removed (stale):', sessionId);
+      get().removeSession(sessionId);
+    });
+
     const unsubMessageUser = window.api.onMessageUser((message, sessionId) => {
       console.log('[Store] User message in session:', sessionId);
       get().addMessage(sessionId, message);
@@ -110,6 +115,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
     return () => {
       unsubSessionStart();
       unsubSessionEnd();
+      unsubSessionRemoved();
       unsubMessageUser();
       unsubMessageAssistant();
     };

@@ -111,6 +111,11 @@ const api = {
     ipcRenderer.on('session:end', listener)
     return () => ipcRenderer.removeListener('session:end', listener)
   },
+  onSessionRemoved: (callback: (sessionId: string) => void) => {
+    const listener = (_: Electron.IpcRendererEvent, sessionId: string) => callback(sessionId)
+    ipcRenderer.on('session:removed', listener)
+    return () => ipcRenderer.removeListener('session:removed', listener)
+  },
   onMessageUser: (callback: MessageCallback) => {
     const listener = (_: Electron.IpcRendererEvent, message: ConversationMessage, sessionId: string) => callback(message, sessionId)
     ipcRenderer.on('message:user', listener)

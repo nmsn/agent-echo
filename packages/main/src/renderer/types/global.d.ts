@@ -21,6 +21,9 @@ interface Session {
   lastActivity: number
   sessionTitle?: string
   headless?: boolean
+  status: 'active' | 'ended'
+  endedAt?: number
+  pidChain?: number[]
 }
 
 interface Config {
@@ -72,8 +75,10 @@ interface ElectronAPI {
   onTTSResult: (callback: (result: TTSResult) => void) => () => void
   onSessionStart: (callback: (session: Session) => void) => () => void
   onSessionEnd: (callback: (session: Session) => void) => () => void
+  onSessionRemoved: (callback: (sessionId: string) => void) => () => void
   onMessageUser: (callback: (message: ConversationMessage, sessionId: string) => void) => () => void
   onMessageAssistant: (callback: (message: ConversationMessage, sessionId: string) => void) => () => void
+  focusTerminal: (sessionId: string) => Promise<{ success: boolean; error?: string }>
 }
 
 declare global {
