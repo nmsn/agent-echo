@@ -63,29 +63,37 @@ export function App() {
   const activeCount = sessions.filter((s) => s.status === 'active').length;
 
   return (
-    <div className="h-screen flex flex-col bg-background overflow-hidden">
-      <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
-        <h1 className="text-lg font-semibold text-foreground">Agent Echo</h1>
-        <button
-          className="px-3 py-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground transition-colors text-sm"
-          onClick={() => setShowSettings(!showSettings)}
-        >
-          {showSettings ? '关闭设置' : '设置'}
-        </button>
-      </header>
+    <div className="h-screen flex bg-background overflow-hidden">
+      {/* Left Sidebar */}
+      <aside className="w-48 shrink-0 flex flex-col border-r border-border bg-card">
+        <div className="px-4 py-3 border-b border-border">
+          <h1 className="text-base font-semibold text-foreground truncate">Agent Echo</h1>
+        </div>
+        <TabBar />
+      </aside>
 
-      <TabBar />
+      {/* Right Main Area */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="flex items-center justify-between px-4 py-3 border-b border-border bg-card">
+          <StatusBar isBridgeRunning={isBridgeRunning} activeCount={activeCount} totalCount={sessions.length} />
+          <button
+            className="px-3 py-1.5 rounded-md bg-secondary text-secondary-foreground hover:bg-accent hover:text-accent-foreground transition-colors text-sm"
+            onClick={() => setShowSettings(!showSettings)}
+          >
+            {showSettings ? '关闭设置' : '设置'}
+          </button>
+        </header>
 
-      <StatusBar isBridgeRunning={isBridgeRunning} activeCount={activeCount} totalCount={sessions.length} />
+        {showSettings && (
+          <SettingsPanel settings={settings} onSettingsChange={handleSettingsChange} />
+        )}
 
-      {showSettings && (
-        <SettingsPanel settings={settings} onSettingsChange={handleSettingsChange} />
-      )}
+        <main className="flex-1 overflow-y-auto">
+          <ChatView onSpeak={handleSpeak} />
+        </main>
 
-      <main className="flex-1 overflow-y-auto">
-        <ChatView onSpeak={handleSpeak} />
-      </main>
-      <ComposeBar enabled={settings.translationEnabled} />
+        <ComposeBar enabled={settings.translationEnabled} />
+      </div>
     </div>
   );
 }
