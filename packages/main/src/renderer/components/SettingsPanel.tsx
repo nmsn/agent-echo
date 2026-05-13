@@ -20,11 +20,9 @@ export function SettingsPanel({ settings, onSettingsChange }: SettingsPanelProps
   });
 
   useEffect(() => {
-    // Load saved translation config
     if (typeof window.api?.configureTranslation === 'function') {
       window.api.configureTranslation({}).then((config) => {
         setTranslationConfig(config);
-        // Auto-enable translation if API key is configured
         if (config.apiKey && !settings.translationEnabled) {
           onSettingsChange({ ...settings, translationEnabled: true });
         }
@@ -41,22 +39,22 @@ export function SettingsPanel({ settings, onSettingsChange }: SettingsPanelProps
   };
 
   return (
-    <div className="px-4 py-4 bg-card border-b border-border">
-      <h3 className="text-sm font-medium text-foreground mb-3">通知设置</h3>
+    <div className="px-4 py-4 bg-[#1E1E1E] border-b border-[#2A2A2A]">
+      <h3 className="text-sm font-semibold text-white mb-3">通知设置</h3>
       <div className="space-y-2">
-        <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+        <label className="flex items-center gap-2.5 text-sm text-[#CCCCCC] cursor-pointer">
           <input
             type="checkbox"
-            className="w-4 h-4 rounded border-border bg-input checked:bg-primary"
+            className="w-4 h-4 rounded border-[#333] bg-[#262626] accent-indigo-500"
             checked={settings.soundEnabled}
             onChange={(e) => onSettingsChange({ ...settings, soundEnabled: e.target.checked })}
           />
           声音提示
         </label>
-        <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+        <label className="flex items-center gap-2.5 text-sm text-[#CCCCCC] cursor-pointer">
           <input
             type="checkbox"
-            className="w-4 h-4 rounded border-border bg-input checked:bg-primary"
+            className="w-4 h-4 rounded border-[#333] bg-[#262626] accent-indigo-500"
             checked={settings.bounceEnabled}
             onChange={(e) => onSettingsChange({ ...settings, bounceEnabled: e.target.checked })}
           />
@@ -64,12 +62,12 @@ export function SettingsPanel({ settings, onSettingsChange }: SettingsPanelProps
         </label>
       </div>
 
-      <h3 className="text-sm font-medium text-foreground mb-3 mt-4">翻译朗读</h3>
+      <h3 className="text-sm font-semibold text-white mb-3 mt-5">翻译朗读</h3>
       <div className="space-y-2">
-        <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
+        <label className="flex items-center gap-2.5 text-sm text-[#CCCCCC] cursor-pointer">
           <input
             type="checkbox"
-            className="w-4 h-4 rounded border-border bg-input checked:bg-primary"
+            className="w-4 h-4 rounded border-[#333] bg-[#262626] accent-indigo-500"
             checked={settings.translationEnabled}
             onChange={(e) => onSettingsChange({ ...settings, translationEnabled: e.target.checked })}
           />
@@ -78,30 +76,30 @@ export function SettingsPanel({ settings, onSettingsChange }: SettingsPanelProps
         {settings.translationEnabled && (
           <div className="pl-6 space-y-3 mt-2">
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">API Key</label>
+              <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#555555] mb-1.5">API Key</label>
               <input
                 type="password"
-                className="w-full px-2 py-1 text-xs border border-border rounded bg-input text-foreground"
+                className="w-full px-3 py-2 text-sm border border-[#2A2A2A] rounded-lg bg-[#0D0D0D] text-[#CCCCCC] placeholder:text-[#555555] outline-none focus:border-indigo-500 transition-colors"
                 placeholder="输入 MiniMax API Key"
                 value={translationConfig.apiKey}
                 onChange={(e) => handleTranslationConfigChange({ apiKey: e.target.value })}
               />
             </div>
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">API Base</label>
+              <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#555555] mb-1.5">API Base</label>
               <input
                 type="text"
-                className="w-full px-2 py-1 text-xs border border-border rounded bg-input text-foreground"
+                className="w-full px-3 py-2 text-sm border border-[#2A2A2A] rounded-lg bg-[#0D0D0D] text-[#CCCCCC] placeholder:text-[#555555] outline-none focus:border-indigo-500 transition-colors"
                 placeholder="https://api.minimax.chat"
                 value={translationConfig.apiBase}
                 onChange={(e) => handleTranslationConfigChange({ apiBase: e.target.value })}
               />
             </div>
             <div>
-              <label className="block text-xs text-muted-foreground mb-1">模型</label>
+              <label className="block text-[11px] font-semibold uppercase tracking-wide text-[#555555] mb-1.5">模型</label>
               <input
                 type="text"
-                className="w-full px-2 py-1 text-xs border border-border rounded bg-input text-foreground"
+                className="w-full px-3 py-2 text-sm border border-[#2A2A2A] rounded-lg bg-[#0D0D0D] text-[#CCCCCC] placeholder:text-[#555555] outline-none focus:border-indigo-500 transition-colors"
                 placeholder="MiniMax-Text-01"
                 value={translationConfig.modelName}
                 onChange={(e) => handleTranslationConfigChange({ modelName: e.target.value })}
