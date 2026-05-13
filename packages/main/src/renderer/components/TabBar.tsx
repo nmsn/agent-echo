@@ -42,22 +42,27 @@ export function TabBar() {
             key={session.id}
             role="tab"
             aria-selected={isActive}
-            className={`flex items-center justify-between px-3 py-2 text-sm text-left rounded-lg transition-colors ${
+            className={`flex items-center justify-between px-5 py-2.5 text-sm text-left rounded-lg transition-colors relative ${
               isActive
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                ? 'bg-[#2A2A3A] text-white'
+                : 'text-[#888888] hover:bg-[#2A2A3A] hover:text-white'
             }`}
             onClick={() => setActiveSession(session.id)}
           >
-            <span className="flex items-center gap-2 min-w-0">
+            <span className="flex items-center gap-2.5 min-w-0">
               <span
                 className={`w-2 h-2 rounded-full shrink-0 ${
-                  isRunning ? 'bg-green-500' : 'bg-gray-400'
+                  isRunning ? 'bg-green-500' : 'bg-[#555555]'
                 }`}
               />
-              <span className="truncate">{label}</span>
+              <span className="truncate font-medium">{label}</span>
             </span>
             <span className="shrink-0 ml-2 text-xs opacity-60">{duration}</span>
+            {isActive && (
+              <span
+                className="absolute left-0 top-0 bottom-0 w-[3px] bg-indigo-500 rounded-r"
+              />
+            )}
           </button>
         );
       })}
