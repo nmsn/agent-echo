@@ -59,27 +59,6 @@ export function App() {
         className="w-[340px] shrink-0 flex flex-col"
         style={{ background: 'var(--sidebar)', borderRight: '1px solid var(--border-soft)' }}
       >
-        {/* Logo */}
-        <div
-          className="h-14 flex items-center px-4 gap-3 border-b"
-          style={{ borderColor: 'var(--border-soft)' }}
-        >
-          <div
-            className="w-8 h-8 rounded-[10px] flex items-center justify-center"
-            style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }}
-          >
-            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 2 L22 8 L22 16 L12 22 L2 16 L2 8 Z" />
-              <path d="M12 2 L12 22" />
-              <path d="M2 8 L22 16" />
-            </svg>
-          </div>
-          <div className="flex items-baseline gap-2.5">
-            <h1 className="text-[15px] font-semibold tracking-tight" style={{ color: 'var(--fg)' }}>Agent Echo</h1>
-            <span className="text-xs tracking-widest" style={{ color: 'var(--dim)' }}>监控 · 翻译 · 朗读</span>
-          </div>
-        </div>
-
         {/* Session List */}
         <div className="flex-1 min-h-0">
           <SessionList />
