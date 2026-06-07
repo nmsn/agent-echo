@@ -31,6 +31,7 @@ export interface Session {
   editor?: string;
   agentPid?: number;
   pidChain?: number[];
+  kind?: 'code' | 'research' | 'data' | 'devops' | 'docs';
 }
 
 export interface ConversationMessage {
