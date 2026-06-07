@@ -85,13 +85,13 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
 
   const handleCopy = async () => {
     const text = translatedText || message.content;
-    const payload = text + '\n\n— ' + (message as any).name + ' · ' + formatTime(message.createdAt);
+    const payload = text + '\n\n— ' + (message as any).name + ' · ' + formatTime(message.timestamp);
     try {
       await navigator.clipboard.writeText(payload);
     } catch {}
   };
 
-  const ts = formatTime(message.createdAt);
+  const ts = formatTime(message.timestamp);
 
   return (
     <article
