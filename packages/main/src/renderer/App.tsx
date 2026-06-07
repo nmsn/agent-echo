@@ -87,6 +87,7 @@ export function App() {
           style={{
             display: 'flex',
             flexDirection: 'column',
+            flex: 1,
             minWidth: 0,
             background: 'var(--bg)',
           }}
