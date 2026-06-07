@@ -102,22 +102,36 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
       {/* Avatar */}
       <div
         className="w-8 h-8 rounded-[10px] flex items-center justify-center text-[11px] font-semibold shrink-0"
-        style={{ background: 'var(--accent)', color: 'oklch(20% 0.01 50)', fontFamily: 'var(--font-mono)' }}
+        style={{
+          background: isUser ? 'var(--surface-3)' : 'var(--accent)',
+          color: isUser ? 'var(--muted)' : 'oklch(20% 0.01 50)',
+          fontFamily: 'var(--font-mono)',
+        }}
       >
-        {(message as any).name?.[0]?.toUpperCase() || 'A'}
+        {isUser ? 'U' : ((message as any).name?.[0]?.toUpperCase() || 'A')}
       </div>
 
       {/* Content */}
       <div className="flex flex-col gap-1.5 min-w-0">
         {/* Meta row */}
         <div className="flex items-center gap-2 text-xs">
-          <span className="font-semibold" style={{ color: 'var(--fg)' }}>{(message as any).name || 'Agent'}</span>
-          <span
-            className="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase"
-            style={{ color: kindStyle.color, background: kindStyle.bg, border: `1px solid ${kindStyle.border}`, letterSpacing: '0.08em' }}
-          >
-            {kindLabel}
-          </span>
+          <span className="font-semibold" style={{ color: 'var(--fg)' }}>{(message as any).name || (isUser ? 'You' : 'Agent')}</span>
+          {!isUser && (
+            <span
+              className="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase"
+              style={{ color: kindStyle.color, background: kindStyle.bg, border: `1px solid ${kindStyle.border}`, letterSpacing: '0.08em' }}
+            >
+              {kindLabel}
+            </span>
+          )}
+          {isUser && (
+            <span
+              className="px-1.5 py-0.5 rounded text-[10px] font-semibold uppercase"
+              style={{ color: 'var(--muted)', background: 'var(--surface-2)', border: '1px solid var(--border-soft)', letterSpacing: '0.08em' }}
+            >
+              用户
+            </span>
+          )}
           <span className="ml-auto text-[10px]" style={{ color: 'var(--dim)', fontFamily: 'var(--font-mono)' }}>{ts}</span>
         </div>
 
@@ -125,9 +139,9 @@ export function MessageItem({ message, sessionId, showTranslation, onSpeak }: Me
         <div
           className="relative px-3.5 py-3 rounded-[14px] text-sm leading-relaxed cursor-pointer"
           style={{
-            background: 'var(--surface)',
+            background: isUser ? 'var(--surface-2)' : 'var(--surface)',
             border: '1px solid var(--border-soft)',
-            borderTopLeftRadius: '4px',
+            borderTopLeftRadius: isUser ? '14px' : '4px',
             color: 'var(--fg)',
           }}
         >
