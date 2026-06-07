@@ -5,7 +5,7 @@ import { ConversationHeader } from './components/ConversationHeader';
 import { MessageItem } from './components/MessageItem';
 import { ComposeBar } from './components/ComposeBar';
 import { SettingsPanel } from './components/SettingsPanel';
-import { Settings, Search } from 'lucide-react';
+import { TitleBar } from './components/TitleBar';
 
 export function App() {
   const { settings, updateSettings, sessions, fetchSessions, subscribeToEvents } = useConversationStore();
@@ -88,44 +88,8 @@ export function App() {
 
       {/* Right Main Area */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Topbar */}
-        <header
-          className="h-14 px-5 flex items-center gap-4 border-b shrink-0"
-          style={{ background: 'var(--surface-3)', borderColor: 'var(--border-soft)', zIndex: 10 }}
-        >
-          {/* Status chip (center) */}
-          <div className="flex-1 flex justify-center">
-            <div
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs"
-              style={{ background: 'oklch(0% 0 0 / 0.25)', border: '1px solid var(--border-soft)', color: 'var(--muted)' }}
-            >
-              <span
-                className="w-2 h-2 rounded-full"
-                style={{ background: 'var(--live)', animation: 'pulse 2.4s ease-in-out infinite', boxShadow: '0 0 0 0 oklch(72% 0.155 145 / 0.4)' }}
-              />
-              <span>{sessions.filter(s => s.status === 'active').length} 个终端在线</span>
-            </div>
-          </div>
-
-          {/* Right: Search + Settings */}
-          <div className="flex items-center gap-2">
-            <button
-              className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-              style={{ color: 'var(--muted)', background: 'transparent' }}
-              title="全局搜索"
-            >
-              <Search className="w-4 h-4" />
-            </button>
-            <button
-              className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-              style={{ color: 'var(--muted)', background: 'transparent' }}
-              onClick={() => setShowSettings(true)}
-              title="设置"
-            >
-              <Settings className="w-4 h-4" />
-            </button>
-          </div>
-        </header>
+        {/* Title Bar with traffic lights */}
+        <TitleBar onSettingsClick={() => setShowSettings(true)} />
 
         {/* Conversation Area */}
         <div className="flex-1 flex flex-col min-h-0" style={{ background: 'var(--bg)' }}>

@@ -106,4 +106,22 @@ export function setupIPCHandlers(
     await focusTerminal(session.pid, session.pidChain, session.editor);
     return { success: true };
   });
+
+  // Window controls (for frameless window)
+  ipcMain.handle('window:minimize', () => {
+    mainWindow?.minimize();
+  });
+  ipcMain.handle('window:maximize', () => {
+    if (mainWindow?.isMaximized()) {
+      mainWindow?.unmaximize();
+    } else {
+      mainWindow?.maximize();
+    }
+  });
+  ipcMain.handle('window:close', () => {
+    mainWindow?.close();
+  });
+  ipcMain.handle('window:isMaximized', () => {
+    return mainWindow?.isMaximized() ?? false;
+  });
 }

@@ -130,6 +130,12 @@ const api = {
   // Focus terminal
   focusTerminal: (sessionId: string): Promise<{ success: boolean; error?: string }> =>
     ipcRenderer.invoke('focus-terminal', sessionId),
+
+  // Window controls
+  windowMinimize: (): Promise<void> => ipcRenderer.invoke('window:minimize'),
+  windowMaximize: (): Promise<void> => ipcRenderer.invoke('window:maximize'),
+  windowClose: (): Promise<void> => ipcRenderer.invoke('window:close'),
+  windowIsMaximized: (): Promise<boolean> => ipcRenderer.invoke('window:isMaximized'),
 }
 
 if (process.contextIsolated) {
