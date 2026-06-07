@@ -35,7 +35,7 @@ export const useConversationStore = create<ConversationState>((set, get) => ({
   settings: {
     soundEnabled: true,
     bounceEnabled: true,
-    translationEnabled: false,
+    translationEnabled: true,
   },
   isBridgeRunning: false,
   tokenStats: {
