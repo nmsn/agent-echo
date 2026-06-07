@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useConversationStore } from './stores/conversation';
-import { ChatView } from './components/ChatView';
+import { SessionList } from './components/SessionList';
+import { ConversationHeader } from './components/ConversationHeader';
+import { MessageItem } from './components/MessageItem';
 import { ComposeBar } from './components/ComposeBar';
 import { SettingsPanel } from './components/SettingsPanel';
-import { TabBar } from './components/TabBar';
-import { Settings, Plus, X } from 'lucide-react';
+import { Settings, Search } from 'lucide-react';
 
 export function App() {
-  const { settings, updateSettings, sessions, fetchSessions, subscribeToEvents, tokenStats } = useConversationStore();
+  const { settings, updateSettings, sessions, fetchSessions, subscribeToEvents } = useConversationStore();
   const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
@@ -35,133 +36,152 @@ export function App() {
   };
 
   const handleSpeak = async (content: string) => {
-    if (!window.api?.speak) {
-      console.log('TTS not available');
-      return;
-    }
-
+    if (!window.api?.speak) return;
     try {
-      const messageId = 'speak-' + Date.now();
-      const result = await window.api.speak(messageId, content);
+      const result = await window.api.speak('speak-' + Date.now(), content);
       if (result.success && result.audioData) {
         const audio = new Audio(result.audioData);
         await audio.play();
-      } else {
-        console.error('TTS failed:', result.error);
       }
-    } catch (err) {
-      console.error('TTS error:', err);
-    }
+    } catch {}
   };
 
-  const activeCount = sessions.filter((s) => s.status === 'active').length;
+  const activeSessionId = useConversationStore(s => s.activeSessionId);
+  const activeSession = sessions.find(s => s.id === activeSessionId);
 
   return (
-    <div className="h-screen flex bg-[#0D0D0D] overflow-hidden">
-      {/* Left Sidebar - 240px fixed */}
-      <aside className="w-60 shrink-0 flex flex-col bg-[#1E1E2E] border-r border-[#2A2A3A]">
+    <div
+      className="h-screen flex overflow-hidden"
+      style={{ background: 'var(--bg)', minWidth: '1100px' }}
+    >
+      {/* Left Sidebar — 340px */}
+      <aside
+        className="w-[340px] shrink-0 flex flex-col"
+        style={{ background: 'var(--sidebar)', borderRight: '1px solid var(--border-soft)' }}
+      >
         {/* Logo */}
-        <div className="h-16 border-b border-[#2A2A3A] flex items-center px-5 gap-2.5">
-          <span className="w-2 h-2 rounded-full bg-indigo-500 shrink-0" />
-          <span className="text-base font-semibold text-white tracking-tight">Agent Echo</span>
+        <div
+          className="h-14 flex items-center px-4 gap-3 border-b"
+          style={{ borderColor: 'var(--border-soft)' }}
+        >
+          <div
+            className="w-8 h-8 rounded-[10px] flex items-center justify-center"
+            style={{ background: 'var(--accent-soft)', color: 'var(--accent)' }}
+          >
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 2 L22 8 L22 16 L12 22 L2 16 L2 8 Z" />
+              <path d="M12 2 L12 22" />
+              <path d="M2 8 L22 16" />
+            </svg>
+          </div>
+          <div className="flex items-baseline gap-2.5">
+            <h1 className="text-[15px] font-semibold tracking-tight" style={{ color: 'var(--fg)' }}>Agent Echo</h1>
+            <span className="text-xs tracking-widest" style={{ color: 'var(--dim)' }}>监控 · 翻译 · 朗读</span>
+          </div>
         </div>
-        <TabBar />
+
+        {/* Session List */}
+        <div className="flex-1 min-h-0">
+          <SessionList />
+        </div>
       </aside>
 
       {/* Right Main Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Topbar */}
-        <header className="h-16 border-b border-[#2A2A2A] flex items-center px-6 gap-4 bg-[#1A1A1A]">
-          <div className="flex-1 max-w-[320px] h-9 rounded-lg bg-[#262626] border border-[#333] flex items-center px-3 gap-2">
-            <span className="w-3.5 h-3.5 rounded bg-[#444] shrink-0" />
-            <span className="text-sm text-[#555555]">Search anything...</span>
+        <header
+          className="h-14 px-5 flex items-center gap-4 border-b shrink-0"
+          style={{ background: 'var(--surface-3)', borderColor: 'var(--border-soft)', zIndex: 10 }}
+        >
+          {/* Status chip (center) */}
+          <div className="flex-1 flex justify-center">
+            <div
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs"
+              style={{ background: 'oklch(0% 0 0 / 0.25)', border: '1px solid var(--border-soft)', color: 'var(--muted)' }}
+            >
+              <span
+                className="w-2 h-2 rounded-full"
+                style={{ background: 'var(--live)', animation: 'pulse 2.4s ease-in-out infinite', boxShadow: '0 0 0 0 oklch(72% 0.155 145 / 0.4)' }}
+              />
+              <span>{sessions.filter(s => s.status === 'active').length} 个终端在线</span>
+            </div>
           </div>
+
+          {/* Right: Search + Settings */}
           <div className="flex items-center gap-2">
             <button
-              className="w-9 h-9 rounded-lg bg-[#262626] border border-[#333] flex items-center justify-center hover:bg-[#333] transition-colors"
+              className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+              style={{ color: 'var(--muted)', background: 'transparent' }}
+              title="全局搜索"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+            <button
+              className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+              style={{ color: 'var(--muted)', background: 'transparent' }}
               onClick={() => setShowSettings(true)}
               title="设置"
             >
-              <Settings className="w-4 h-4 text-[#888888]" />
+              <Settings className="w-4 h-4" />
             </button>
           </div>
         </header>
 
-        {/* Main Content */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-6 py-6">
-            {/* Content Header */}
-            <div className="flex items-start justify-between mb-5">
-              <div>
-                <h2 className="text-xl font-bold text-white tracking-tight">Agent Echo</h2>
-                <p className="text-sm text-[#555555] mt-0.5">会话监控与翻译助手</p>
-              </div>
-              <button className="h-9 px-4 bg-indigo-500 rounded-lg text-sm font-semibold text-white flex items-center gap-2 hover:opacity-90 transition-opacity">
-                <Plus className="w-4 h-4" />
-                新会话
-              </button>
-            </div>
+        {/* Conversation Area */}
+        <div className="flex-1 flex flex-col min-h-0" style={{ background: 'var(--bg)' }}>
+          <ConversationHeader />
 
-            {/* KPI Cards */}
-            <div className="grid grid-cols-4 gap-4 mb-5">
-              <div className="bg-[#1E1E1E] border border-[#2A2A2A] rounded-xl p-5">
-                <div className="w-9 h-9 rounded-lg bg-[#2A2A3A] mb-3" />
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-[#555555] mb-2">Output Tokens</div>
-                <div className="text-[28px] font-bold text-white tracking-tight tabular-nums">{tokenStats.totalOutputTokens.toLocaleString()}</div>
-                <div className="mt-2 inline-block px-2 py-1 rounded-full text-[11px] font-semibold bg-[#052C16] text-green-400">+12.5%</div>
-              </div>
-              <div className="bg-[#1E1E1E] border border-[#2A2A2A] rounded-xl p-5">
-                <div className="w-9 h-9 rounded-lg bg-[#2A2A3A] mb-3" />
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-[#555555] mb-2">Input Tokens</div>
-                <div className="text-[28px] font-bold text-white tracking-tight tabular-nums">{tokenStats.totalInputTokens.toLocaleString()}</div>
-                <div className="mt-2 inline-block px-2 py-1 rounded-full text-[11px] font-semibold bg-[#052C16] text-green-400">+8.2%</div>
-              </div>
-              <div className="bg-[#1E1E1E] border border-[#2A2A2A] rounded-xl p-5">
-                <div className="w-9 h-9 rounded-lg bg-[#2A2A3A] mb-3" />
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-[#555555] mb-2">Active Sessions</div>
-                <div className="text-[28px] font-bold text-white tracking-tight tabular-nums">{activeCount}</div>
-                <div className="mt-2 inline-block px-2 py-1 rounded-full text-[11px] font-semibold bg-[#2C0B0B] text-red-400">-3.1%</div>
-              </div>
-              <div className="bg-[#1E1E1E] border border-[#2A2A2A] rounded-xl p-5">
-                <div className="w-9 h-9 rounded-lg bg-[#2A2A3A] mb-3" />
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-[#555555] mb-2">Total Sessions</div>
-                <div className="text-[28px] font-bold text-white tracking-tight tabular-nums">{sessions.length}</div>
-                <div className="mt-2 inline-block px-2 py-1 rounded-full text-[11px] font-semibold bg-[#2C0B0B] text-red-400">-2.0%</div>
-              </div>
-            </div>
-
-            {/* Chat Messages */}
-            <div className="bg-[#1E1E1E] border border-[#2A2A2A] rounded-xl overflow-hidden">
-              <div className="px-5 py-4 border-b border-[#2A2A2A] flex items-center justify-between">
-                <span className="text-sm font-semibold text-white">会话记录</span>
-              </div>
-              <div className="p-4">
-                <ChatView onSpeak={handleSpeak} />
-              </div>
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto px-6 py-6" style={{ scrollbarWidth: 'thin', scrollbarColor: 'var(--border) transparent' }}>
+            <div className="flex flex-col gap-4">
+              {!activeSession ? (
+                <div className="flex-1 flex items-center justify-center py-12">
+                  <p style={{ color: 'var(--dim)' }}>选择左侧会话开始监控</p>
+                </div>
+              ) : activeSession.messages.length === 0 ? (
+                <div className="flex-1 flex items-center justify-center py-12">
+                  <p style={{ color: 'var(--dim)' }}>暂无消息</p>
+                </div>
+              ) : (
+                activeSession.messages.map((message) => (
+                  <MessageItem
+                    key={message.id}
+                    message={message}
+                    sessionId={activeSession.id}
+                    showTranslation={settings.translationEnabled}
+                    onSpeak={handleSpeak}
+                  />
+                ))
+              )}
             </div>
           </div>
-        </div>
 
-        <ComposeBar enabled={settings.translationEnabled} />
+          <ComposeBar enabled={settings.translationEnabled} />
+        </div>
       </div>
 
       {/* Settings Modal */}
       {showSettings && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Backdrop */}
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setShowSettings(false)}
           />
-          {/* Modal */}
-          <div className="relative w-120 bg-[#1E1E1E] border border-[#2A2A2A] rounded-xl shadow-2xl overflow-hidden">
-            <div className="flex items-center justify-between px-5 py-4 border-b border-[#2A2A2A]">
-              <h3 className="text-base font-semibold text-white">设置</h3>
+          <div
+            className="relative w-[480px] rounded-xl shadow-2xl overflow-hidden"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+          >
+            <div
+              className="flex items-center justify-between px-5 py-4 border-b"
+              style={{ borderColor: 'var(--border-soft)' }}
+            >
+              <h3 className="text-base font-semibold" style={{ color: 'var(--fg)' }}>设置</h3>
               <button
-                className="w-8 h-8 rounded-lg bg-[#262626] border border-[#333] flex items-center justify-center hover:bg-[#333] transition-colors"
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                style={{ background: 'var(--surface-2)', color: 'var(--muted)' }}
                 onClick={() => setShowSettings(false)}
               >
-                <X className="w-4 h-4 text-[#888888]" />
+                ✕
               </button>
             </div>
             <div className="p-5">
