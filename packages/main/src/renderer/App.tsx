@@ -51,38 +51,64 @@ export function App() {
 
   return (
     <div
-      className="h-screen flex overflow-hidden"
-      style={{ background: 'var(--bg)' }}
+      style={{
+        display: 'grid',
+        gridTemplateRows: '36px 1fr',
+        height: '100vh',
+        minWidth: '1100px',
+        background: 'var(--bg)',
+      }}
     >
-      {/* Left Sidebar — 340px */}
-      <aside
-        className="w-[340px] shrink-0 flex flex-col"
-        style={{ background: 'var(--sidebar)', borderRight: '1px solid var(--border-soft)' }}
+      {/* Row 1: TitleBar — full width */}
+      <TitleBar onSettingsClick={() => setShowSettings(true)} />
+
+      {/* Row 2: Workspace */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: '340px 1fr',
+          minHeight: 0,
+        }}
       >
-        {/* Session List */}
-        <div className="flex-1 min-h-0">
+        {/* Sidebar */}
+        <aside
+          style={{
+            background: 'var(--sidebar)',
+            borderRight: '1px solid var(--border-soft)',
+            display: 'flex',
+            flexDirection: 'column',
+          }}
+        >
           <SessionList />
-        </div>
-      </aside>
+        </aside>
 
-      {/* Right Main Area */}
-      <div className="flex-1 flex flex-col min-w-0">
-        {/* Title Bar with traffic lights */}
-        <TitleBar onSettingsClick={() => setShowSettings(true)} />
-
-        {/* Conversation Area */}
-        <div className="flex-1 flex flex-col min-h-0" style={{ background: 'var(--bg)' }}>
+        {/* Conversation */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            minWidth: 0,
+            background: 'var(--bg)',
+          }}
+        >
           <ConversationHeader />
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto px-6 py-6" style={{ scrollbarWidth: 'thin', scrollbarColor: 'var(--border) transparent' }}>
-            <div className="flex flex-col gap-4">
+          <div
+            style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '24px',
+              scrollbarWidth: 'thin',
+              scrollbarColor: 'var(--border) transparent',
+            }}
+          >
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
               {!activeSession ? (
-                <div className="flex-1 flex items-center justify-center py-12">
-                  <p style={{ color: 'var(--dim)' }}>选择左侧会话开始监控</p>
-                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, paddingTop: '48px' }}>
+                <p style={{ color: 'var(--dim)' }}>选择左侧会话开始监控</p>
+              </div>
               ) : activeSession.messages.length === 0 ? (
-                <div className="flex-1 flex items-center justify-center py-12">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, paddingTop: '48px' }}>
                   <p style={{ color: 'var(--dim)' }}>暂无消息</p>
                 </div>
               ) : (
@@ -105,29 +131,65 @@ export function App() {
 
       {/* Settings Modal */}
       {showSettings && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 50,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
           <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(0,0,0,0.6)',
+              backdropFilter: 'blur(4px)',
+            }}
             onClick={() => setShowSettings(false)}
           />
           <div
-            className="relative w-[480px] rounded-xl shadow-2xl overflow-hidden"
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+            style={{
+              position: 'relative',
+              width: '480px',
+              borderRadius: '12px',
+              boxShadow: 'var(--shadow-2)',
+              overflow: 'hidden',
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+            }}
           >
             <div
-              className="flex items-center justify-between px-5 py-4 border-b"
-              style={{ borderColor: 'var(--border-soft)' }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '16px 20px',
+                borderBottom: '1px solid var(--border-soft)',
+              }}
             >
-              <h3 className="text-base font-semibold" style={{ color: 'var(--fg)' }}>设置</h3>
+              <h3 style={{ fontSize: '15px', fontWeight: 600, color: 'var(--fg)' }}>设置</h3>
               <button
-                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-                style={{ background: 'var(--surface-2)', color: 'var(--muted)' }}
                 onClick={() => setShowSettings(false)}
+                style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: 'var(--surface-2)',
+                  color: 'var(--muted)',
+                  border: 'none',
+                  cursor: 'pointer',
+                }}
               >
                 ✕
               </button>
             </div>
-            <div className="p-5">
+            <div style={{ padding: '20px' }}>
               <SettingsPanel settings={settings} onSettingsChange={handleSettingsChange} />
             </div>
           </div>
