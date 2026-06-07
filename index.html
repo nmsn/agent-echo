@@ -1,0 +1,1214 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agent Echo — Claude 主题</title>
+  <style>
+    /* ============================================================
+       agent-echo — Claude 主题 (暗色暖调)
+       ============================================================ */
+    :root {
+      --bg:          oklch(17% 0.011 50);
+      --sidebar:     oklch(14% 0.009 50);
+      --surface:     oklch(21% 0.013 50);
+      --surface-2:   oklch(25% 0.014 50);
+      --surface-3:   oklch(28% 0.014 50);
+      --code-bg:     oklch(13% 0.012 50);
+      --fg:          oklch(96% 0.007 60);
+      --muted:       oklch(72% 0.011 60);
+      --dim:         oklch(54% 0.010 60);
+      --border:      oklch(30% 0.013 50);
+      --border-soft: oklch(25% 0.012 50);
+      --accent:        oklch(70% 0.145 40);
+      --accent-hover:  oklch(75% 0.150 40);
+      --accent-soft:   oklch(33% 0.075 40);
+      --accent-ring:   oklch(70% 0.145 40 / 0.35);
+      --live:    oklch(72% 0.155 145);
+      --font-body: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Inter',
+                   'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+      --font-mono: 'JetBrains Mono', 'SF Mono', 'IBM Plex Mono', Menlo, monospace;
+      --r-sm: 6px; --r-md: 10px; --r-lg: 14px;
+      --shadow-1: 0 1px 0 oklch(0% 0 0 / 0.4), 0 1px 2px oklch(0% 0 0 / 0.3);
+      --shadow-2: 0 8px 24px oklch(0% 0 0 / 0.45), 0 2px 6px oklch(0% 0 0 / 0.35);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: var(--font-body); font-size: 14px; line-height: 1.5;
+      color: var(--fg); background: var(--bg);
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+      overflow: hidden;
+    }
+    ::selection { background: var(--accent-soft); color: var(--fg); }
+
+    .app { display: grid; grid-template-rows: 56px 1fr; height: 100vh; min-width: 1100px; background: var(--bg); }
+
+    /* Topbar */
+    .topbar {
+      display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+      padding: 0 18px; background: var(--surface-3);
+      border-bottom: 1px solid var(--border-soft); z-index: 10;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .app-mark {
+      width: 32px; height: 32px; display: grid; place-items: center;
+      border-radius: var(--r-md); background: var(--accent-soft); color: var(--accent);
+      border: 1px solid oklch(70% 0.145 40 / 0.25);
+    }
+    .app-title { display: flex; align-items: baseline; gap: 10px; }
+    .app-title h1 { font-size: 15px; font-weight: 600; letter-spacing: -0.005em; }
+    .app-sub { font-size: 12px; color: var(--dim); letter-spacing: 0.04em; }
+    .topbar-meta {
+      justify-self: center; display: inline-flex; align-items: center; gap: 8px;
+      padding: 5px 12px; background: oklch(0% 0 0 / 0.25);
+      border: 1px solid var(--border-soft); border-radius: 999px;
+      font-size: 12px; color: var(--muted);
+    }
+    .topbar-right { justify-self: end; display: flex; align-items: center; gap: 8px; }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%; background: var(--live);
+      box-shadow: 0 0 0 0 var(--live); animation: pulse 2.4s ease-in-out infinite;
+    }
+    .dot.live.small { width: 6px; height: 6px; }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 oklch(72% 0.155 145 / 0.4); }
+      50%      { box-shadow: 0 0 0 5px oklch(72% 0.155 145 / 0); }
+    }
+    .icon-btn {
+      width: 32px; height: 32px; display: grid; place-items: center;
+      background: transparent; color: var(--muted); border: 1px solid transparent;
+      border-radius: var(--r-md); cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .icon-btn:hover { background: var(--surface-2); color: var(--fg); }
+    .icon-btn:active { background: var(--surface); }
+
+    /* Workspace */
+    .workspace { display: grid; grid-template-columns: 340px 1fr; min-height: 0; }
+
+    /* Sidebar */
+    .sidebar { display: grid; grid-template-rows: auto 1fr auto; background: var(--sidebar); border-right: 1px solid var(--border-soft); min-height: 0; }
+    .sidebar-head { padding: 14px 14px 10px; border-bottom: 1px solid var(--border-soft); }
+    .search {
+      display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px;
+      padding: 7px 10px; background: oklch(0% 0 0 / 0.25);
+      border: 1px solid var(--border-soft); border-radius: var(--r-md); color: var(--dim);
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .search:focus-within { border-color: var(--accent-ring); background: oklch(0% 0 0 / 0.35); }
+    .search input { background: transparent; border: 0; outline: 0; color: var(--fg); font: inherit; font-size: 13px; min-width: 0; }
+    .search input::placeholder { color: var(--dim); }
+    .search kbd { font: 10px/1 var(--font-mono); color: var(--dim); padding: 3px 5px; border: 1px solid var(--border); border-radius: 4px; background: oklch(0% 0 0 / 0.3); }
+    /* filter tabs removed: 旁路监听器无 "未读 / 已标星" 概念 */
+
+    .session-list { list-style: none; overflow-y: auto; padding: 8px 6px 12px; min-height: 0; }
+    .session-list::-webkit-scrollbar { width: 8px; }
+    .session-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    .session-list::-webkit-scrollbar-thumb:hover { background: oklch(36% 0.014 50); }
+    .session-item {
+      position: relative; display: grid; grid-template-columns: 36px 1fr auto; gap: 10px;
+      padding: 10px; border-radius: var(--r-md); cursor: pointer; border: 1px solid transparent;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .session-item + .session-item { margin-top: 1px; }
+    .session-item:hover { background: oklch(0% 0 0 / 0.22); }
+    .session-item.active { background: var(--surface-2); border-color: var(--border); }
+    .session-item.active::before {
+      content: ""; position: absolute; left: -6px; top: 12px; bottom: 12px;
+      width: 3px; background: var(--accent); border-radius: 0 2px 2px 0;
+    }
+    .s-avatar {
+      width: 36px; height: 36px; display: grid; place-items: center; border-radius: 10px;
+      font: 600 12px/1 var(--font-mono); letter-spacing: 0.02em;
+      color: oklch(20% 0.01 50); background: var(--accent); flex-shrink: 0;
+    }
+    .s-avatar[data-kind="code"]     { background: oklch(78% 0.110 60);  color: oklch(20% 0.02 60); }
+    .s-avatar[data-kind="research"] { background: oklch(74% 0.105 200); color: oklch(18% 0.02 220); }
+    .s-avatar[data-kind="data"]     { background: oklch(76% 0.130 145); color: oklch(18% 0.02 145); }
+    .s-avatar[data-kind="devops"]   { background: oklch(70% 0.130 320); color: oklch(98% 0.005 320); }
+    .s-avatar[data-kind="docs"]     { background: oklch(75% 0.110 100); color: oklch(20% 0.02 100); }
+    .s-body { min-width: 0; }
+    .s-top { display: flex; align-items: center; gap: 6px; margin-bottom: 3px; }
+    .s-name { font-size: 13px; font-weight: 600; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .s-preview { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .s-right { display: flex; flex-direction: column; align-items: flex-end; gap: 6px; flex-shrink: 0; }
+    .s-time { font: 10px/1 var(--font-mono); color: var(--dim); }
+    .sidebar-foot {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 14px; border-top: 1px solid var(--border-soft);
+      color: var(--muted); font-size: 12px;
+    }
+    .sidebar-foot .dot-inline { width: 6px; height: 6px; background: var(--live); border-radius: 50%; box-shadow: 0 0 6px oklch(72% 0.155 145 / 0.5); }
+
+    /* Conversation */
+    .conversation { display: grid; grid-template-rows: auto 1fr auto; min-width: 0; min-height: 0; background: var(--bg); }
+    .conv-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 24px; background: var(--bg); border-bottom: 1px solid var(--border-soft);
+    }
+    .conv-head-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+    .conv-avatar {
+      width: 40px; height: 40px; display: grid; place-items: center;
+      background: var(--accent); color: oklch(20% 0.01 50);
+      font: 700 13px/1 var(--font-mono); border-radius: 12px; flex-shrink: 0;
+    }
+    .conv-avatar[data-kind="code"]     { background: oklch(78% 0.110 60); }
+    .conv-avatar[data-kind="research"] { background: oklch(74% 0.105 200); }
+    .conv-avatar[data-kind="data"]     { background: oklch(76% 0.130 145); }
+    .conv-avatar[data-kind="devops"]   { background: oklch(70% 0.130 320); color: oklch(98% 0.005 320); }
+    .conv-avatar[data-kind="docs"]     { background: oklch(75% 0.110 100); }
+    .conv-title { font-size: 15px; font-weight: 600; margin-bottom: 2px; }
+    .conv-meta { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+    .meta-tag { font: 500 11px/1 var(--font-mono); color: var(--accent); background: var(--accent-soft); padding: 3px 7px; border-radius: 4px; letter-spacing: 0.02em; }
+    .meta-tag-monitor { color: oklch(72% 0.155 145); background: oklch(28% 0.060 145 / 0.35); }
+    .meta-sep { color: var(--dim); }
+    .conv-head-actions { display: flex; align-items: center; gap: 6px; }
+    .chip-btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px;
+      background: transparent; color: var(--muted); border: 1px solid var(--border-soft);
+      border-radius: var(--r-md); font: inherit; font-size: 12px; cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .chip-btn:hover { color: var(--fg); background: var(--surface-2); border-color: var(--border); }
+
+    /* Messages */
+    .messages { overflow-y: auto; padding: 24px 24px 32px; display: flex; flex-direction: column; gap: 18px; scroll-behavior: smooth; }
+    .messages::-webkit-scrollbar { width: 10px; }
+    .messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 5px; }
+    .messages::-webkit-scrollbar-thumb:hover { background: oklch(36% 0.014 50); }
+    .day-sep {
+      display: flex; align-items: center; gap: 14px; margin: 8px 0 4px;
+      color: var(--dim); font: 10px/1 var(--font-mono); letter-spacing: 0.16em; text-transform: uppercase;
+    }
+    .day-sep::before, .day-sep::after { content: ""; flex: 1; height: 1px; background: var(--border-soft); }
+    .msg { display: grid; grid-template-columns: 32px 1fr; gap: 12px; max-width: 880px; }
+    .msg .av {
+      width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px;
+      font: 600 11px/1 var(--font-mono); color: oklch(20% 0.01 50); background: var(--accent); flex-shrink: 0;
+    }
+    .msg .av[data-kind="code"]     { background: oklch(78% 0.110 60); }
+    .msg .av[data-kind="research"] { background: oklch(74% 0.105 200); }
+    .msg .av[data-kind="data"]     { background: oklch(76% 0.130 145); }
+    .msg .av[data-kind="devops"]   { background: oklch(70% 0.130 320); color: oklch(98% 0.005 320); }
+    .msg .av[data-kind="docs"]     { background: oklch(75% 0.110 100); }
+    .bubbles { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+    .msg-meta { display: flex; align-items: baseline; gap: 8px; font-size: 12px; margin-bottom: 2px; }
+    .msg-meta .name { font-weight: 600; color: var(--fg); }
+    .msg-meta .kind {
+      font: 600 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 3px 6px; border-radius: 4px; border: 1px solid transparent;
+    }
+    .msg-meta .kind[data-kind="progress"] { color: oklch(74% 0.105 200); background: oklch(74% 0.105 200 / 0.12); border-color: oklch(74% 0.105 200 / 0.25); }
+    .msg-meta .kind[data-kind="finding"]  { color: var(--accent); background: var(--accent-soft); border-color: oklch(70% 0.145 40 / 0.3); }
+    .msg-meta .kind[data-kind="decision"] { color: oklch(76% 0.130 145); background: oklch(76% 0.130 145 / 0.12); border-color: oklch(76% 0.130 145 / 0.25); }
+    .msg-meta .kind[data-kind="summary"]  { color: oklch(78% 0.110 60); background: oklch(78% 0.110 60 / 0.12); border-color: oklch(78% 0.110 60 / 0.25); }
+    .msg-meta .ts   { color: var(--dim); font: 10px/1 var(--font-mono); margin-left: auto; }
+    .bubble {
+      position: relative; padding: 12px 14px; background: var(--surface);
+      border: 1px solid var(--border-soft); border-radius: 14px;
+      border-top-left-radius: 4px; color: var(--fg); font-size: 14px; line-height: 1.6;
+      cursor: pointer;
+    }
+    .bubble:hover { border-color: var(--border); }
+    .bubble code {
+      font: 12.5px/1.5 var(--font-mono); background: var(--code-bg);
+      color: oklch(82% 0.080 40); padding: 1px 6px;
+      border-radius: 4px; border: 1px solid var(--border-soft);
+    }
+    .bubble .inline-link {
+      color: var(--accent); text-decoration: none;
+      border-bottom: 1px solid oklch(70% 0.145 40 / 0.4);
+    }
+    .bubble .inline-link:hover { border-bottom-color: var(--accent); }
+    .bubble-actions { display: flex; align-items: center; gap: 2px; margin-top: 6px; opacity: 0.45; transition: opacity 0.15s; }
+    .msg:hover .bubble-actions, .bubble-actions:focus-within { opacity: 1; }
+    .act-btn {
+      display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px;
+      background: transparent; color: var(--dim); border: 0;
+      font: inherit; font-size: 11.5px; cursor: pointer;
+      transition: color 0.12s;
+    }
+    .act-btn:hover { color: var(--fg); }
+    .act-btn.active { color: var(--accent); }
+    .act-btn.speaking { color: var(--accent); }
+    .act-btn .icon { display: inline-flex; }
+
+    .translation {
+      display: none; margin-top: 6px; padding: 11px 14px;
+      background: oklch(15% 0.012 50); border: 1px solid var(--border-soft);
+      border-left: 2px solid var(--accent); border-radius: 0 10px 10px 0;
+      color: var(--muted); font-size: 13px; line-height: 1.6;
+    }
+    .translation.show { display: block; animation: slideIn 0.22s ease-out; }
+    .translation.loading { color: var(--dim); font-style: italic; }
+    .translation .tr-tag {
+      display: inline-block; font: 600 10px/1 var(--font-mono); color: var(--accent);
+      background: var(--accent-soft); padding: 3px 6px; border-radius: 4px;
+      margin-bottom: 6px; letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    @keyframes slideIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+    .wave { display: inline-flex; align-items: center; gap: 2px; height: 12px; }
+    .wave span { display: block; width: 2px; background: var(--accent); border-radius: 1px; animation: wave 0.9s ease-in-out infinite; }
+    .wave span:nth-child(1) { height: 4px;  animation-delay: 0s; }
+    .wave span:nth-child(2) { height: 10px; animation-delay: 0.15s; }
+    .wave span:nth-child(3) { height: 6px;  animation-delay: 0.3s; }
+    .wave span:nth-child(4) { height: 12px; animation-delay: 0.45s; }
+    @keyframes wave { 0%, 100% { transform: scaleY(0.4); } 50% { transform: scaleY(1); } }
+
+    /* Compose helper — translate zh → en, copy, paste in agent UI */
+    .composer { padding: 14px 24px 16px; background: var(--bg); border-top: 1px solid var(--border-soft); }
+    .composer-bar {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      margin-bottom: 10px; min-height: 24px;
+    }
+    .composer-bar-left { display: flex; align-items: center; gap: 8px; min-width: 0; }
+    .composer-bar-left .label {
+      font: 600 11px/1 var(--font-mono); letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--accent);
+    }
+    .composer-bar-left .label::before {
+      content: ""; display: inline-block; width: 5px; height: 5px;
+      background: var(--accent); border-radius: 50%; margin-right: 7px; vertical-align: 2px;
+    }
+    .composer-target {
+      display: inline-flex; align-items: center; gap: 6px; padding: 4px 9px;
+      background: var(--surface-2); border: 1px solid var(--border-soft);
+      border-radius: 999px; font-size: 11.5px; color: var(--muted);
+    }
+    .composer-target .target-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+    .composer-target .target-name { color: var(--fg); font-weight: 600; }
+    .composer-bar-right { display: flex; align-items: center; gap: 4px; }
+    .compose-toggle {
+      display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px;
+      background: transparent; color: var(--dim); border: 0; border-radius: 6px;
+      font: inherit; font-size: 11.5px; cursor: pointer;
+      transition: color 0.12s, background 0.12s;
+    }
+    .compose-toggle:hover { color: var(--fg); background: var(--surface-2); }
+    .compose-toggle .chev { transition: transform 0.18s ease; }
+    .composer.collapsed .compose-body { display: none; }
+    .composer.collapsed .compose-toggle .chev { transform: rotate(180deg); }
+    .compose-toggle kbd {
+      font: 10px/1 var(--font-mono); color: var(--dim); padding: 2px 5px;
+      border: 1px solid var(--border-soft); border-radius: 4px; background: oklch(0% 0 0 / 0.3);
+      margin-left: 2px;
+    }
+
+    .compose-body { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .compose-pane {
+      display: flex; flex-direction: column; min-width: 0;
+      background: var(--surface); border: 1px solid var(--border-soft);
+      border-radius: var(--r-md); transition: border-color 0.15s, background 0.15s;
+    }
+    .compose-pane:focus-within { border-color: var(--border); background: var(--surface-2); }
+    .compose-pane.out { background: oklch(15% 0.012 50); }
+    .compose-pane-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 6px 10px; border-bottom: 1px solid var(--border-soft);
+      color: var(--dim); font: 600 10px/1 var(--font-mono);
+      letter-spacing: 0.14em; text-transform: uppercase;
+    }
+    .compose-pane-head .ph-lang { color: var(--muted); }
+    .compose-pane-head .ph-action { color: var(--dim); display: inline-flex; align-items: center; gap: 4px; }
+    .compose-pane.in .compose-pane-head .ph-action { display: none; }
+    .compose-textarea {
+      flex: 1; min-height: 64px; max-height: 200px; resize: none;
+      background: transparent; border: 0; outline: 0; color: var(--fg);
+      font: inherit; font-size: 13.5px; line-height: 1.55; padding: 10px 12px;
+    }
+    .compose-textarea::placeholder { color: var(--dim); }
+    .compose-output {
+      flex: 1; min-height: 64px; max-height: 200px; overflow-y: auto;
+      padding: 10px 12px; color: var(--fg); font-size: 13.5px; line-height: 1.55;
+      white-space: pre-wrap; word-break: break-word;
+    }
+    .compose-output.placeholder { color: var(--dim); font-style: italic; }
+    .compose-output .stream {
+      display: inline-block; width: 6px; height: 13px; background: var(--accent);
+      margin-left: 2px; vertical-align: -2px; animation: blink 1s steps(2) infinite;
+    }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    .compose-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .compose-chip {
+      display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px;
+      background: oklch(0% 0 0 / 0.2); color: var(--muted);
+      border: 1px solid var(--border-soft); border-radius: 999px;
+      font: inherit; font-size: 11.5px; cursor: pointer;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    .compose-chip:hover { color: var(--fg); border-color: var(--border); }
+    .compose-chip.active { background: var(--accent-soft); color: var(--accent); border-color: oklch(70% 0.145 40 / 0.3); }
+    .compose-chip .chip-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: 0.6; }
+    .compose-chip .chip-x { color: var(--dim); margin-left: 2px; font-size: 12px; line-height: 1; }
+
+    .compose-foot {
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
+      margin-top: 10px;
+    }
+    .compose-foot-left {
+      display: flex; align-items: center; gap: 8px; min-width: 0;
+      font: 10px/1 var(--font-mono); color: var(--dim); letter-spacing: 0.08em; text-transform: uppercase;
+    }
+    .compose-foot-left .kdb-group {
+      display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px;
+      background: oklch(0% 0 0 / 0.25); border: 1px solid var(--border-soft); border-radius: 6px;
+      text-transform: none; letter-spacing: 0.02em; color: var(--muted); font: 11px/1 var(--font-mono);
+    }
+    .compose-foot-left .kdb-group kbd {
+      font: 10px/1 var(--font-mono); color: var(--fg); padding: 2px 5px;
+      border: 1px solid var(--border); border-radius: 3px; background: var(--surface-3);
+    }
+    .compose-foot-right { display: flex; align-items: center; gap: 6px; }
+    .retry-btn {
+      display: inline-flex; align-items: center; gap: 5px; padding: 7px 11px;
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border); border-radius: var(--r-md);
+      font: inherit; font-size: 12px; cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .retry-btn:hover { color: var(--fg); background: var(--surface-2); border-color: var(--accent-ring); }
+    .retry-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .translate-btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px;
+      background: var(--surface-2); color: var(--fg);
+      border: 1px solid var(--border); border-radius: var(--r-md);
+      font: 600 12px/1 inherit; cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .translate-btn:hover { background: var(--surface-3); border-color: var(--accent-ring); }
+    .translate-btn .arrow { color: var(--accent); }
+    .copy-btn {
+      display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px;
+      background: var(--accent); color: oklch(18% 0.012 50);
+      border: 0; border-radius: var(--r-md);
+      font: 600 12px/1 inherit; cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .copy-btn:hover { background: var(--accent-hover); }
+    .copy-btn:active { transform: translateY(1px); }
+    .copy-btn.copied { background: var(--live); color: oklch(15% 0.01 145); }
+    .copy-btn:disabled { background: var(--surface-2); color: var(--dim); cursor: not-allowed; }
+
+    .compose-history { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border-soft); }
+    .compose-history-head {
+      display: flex; align-items: center; justify-content: space-between;
+      font: 10px/1 var(--font-mono); letter-spacing: 0.14em; text-transform: uppercase;
+      color: var(--dim); margin-bottom: 8px;
+    }
+    .compose-history-head .hh-clear {
+      background: transparent; border: 0; color: var(--dim); cursor: pointer;
+      font: inherit; font-size: 10px; letter-spacing: 0.14em;
+    }
+    .compose-history-head .hh-clear:hover { color: var(--accent); }
+    .compose-history-list { display: flex; flex-direction: column; gap: 4px; }
+    .history-item {
+      display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center;
+      padding: 7px 10px; background: oklch(0% 0 0 / 0.15);
+      border: 1px solid transparent; border-radius: var(--r-sm);
+      transition: background 0.12s, border-color 0.12s;
+    }
+    .history-item:hover { background: var(--surface-2); border-color: var(--border-soft); }
+    .history-item .hi-src { font-size: 12px; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .history-item .hi-arrow { color: var(--dim); font: 10px/1 var(--font-mono); }
+    .history-item .hi-en { font-size: 12px; color: var(--fg); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 280px; }
+    .history-item .hi-actions { display: flex; gap: 2px; }
+    .history-item .hi-act {
+      width: 24px; height: 24px; display: grid; place-items: center;
+      background: transparent; border: 0; border-radius: 4px;
+      color: var(--dim); cursor: pointer;
+    }
+    .history-item .hi-act:hover { color: var(--accent); background: var(--accent-soft); }
+
+    /* Toast */
+    .toast {
+      position: fixed; bottom: 24px; left: 50%;
+      transform: translate(-50%, 16px); background: var(--surface-3); color: var(--fg);
+      border: 1px solid var(--border); border-radius: 999px;
+      padding: 8px 16px; font-size: 12.5px; box-shadow: var(--shadow-2);
+      opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; z-index: 100;
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .toast .dot-inline { display: inline-block; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+
+    @media (max-width: 1100px) {
+      .app { min-width: 0; }
+      .workspace { grid-template-columns: 300px 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+
+    <header class="topbar">
+      <div class="topbar-left">
+        <div class="app-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2 L22 8 L22 16 L12 22 L2 16 L2 8 Z" />
+            <path d="M12 2 L12 22" />
+            <path d="M2 8 L22 16" />
+          </svg>
+        </div>
+        <div class="app-title">
+          <h1>Agent Echo</h1>
+          <span class="app-sub">监控 · 翻译 · 朗读</span>
+        </div>
+      </div>
+      <div class="topbar-meta">
+        <span class="dot live"></span>
+        <span class="topbar-status" id="live-count">5 个终端在线</span>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" title="全局搜索" aria-label="搜索">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        </button>
+        <button class="icon-btn" title="设置" aria-label="设置">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <main class="workspace">
+
+      <aside class="sidebar" aria-label="会话列表">
+        <div class="sidebar-head">
+          <label class="search">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            <input id="search-input" type="search" placeholder="搜索会话或消息…" />
+            <kbd>⌘K</kbd>
+          </label>
+        </div>
+        <ul class="session-list" id="session-list" role="listbox" aria-label="终端会话"></ul>
+        <div class="sidebar-foot">
+          <span class="dot-inline" aria-hidden="true"></span>
+          <span>持续监听中</span>
+        </div>
+      </aside>
+
+      <section class="conversation" aria-label="对话区">
+        <header class="conv-head">
+          <div class="conv-head-left">
+            <div class="conv-avatar" id="conv-avatar">PR</div>
+            <div>
+              <h2 class="conv-title" id="conv-title">—</h2>
+              <p class="conv-meta">
+                <span class="meta-tag meta-tag-monitor">只读监听</span>
+                <span class="meta-sep">·</span>
+                <span class="meta-tag" id="conv-agent">—</span>
+                <span class="meta-sep">·</span>
+                <span id="conv-task">—</span>
+                <span class="meta-sep">·</span>
+                <span class="dot live small"></span>
+                <span class="conv-status">进行中</span>
+              </p>
+            </div>
+          </div>
+          <div class="conv-head-actions">
+            <button class="chip-btn" title="复制整段对话">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+              复制
+            </button>
+            <button class="chip-btn" title="导出为 Markdown">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              导出
+            </button>
+            <button class="icon-btn" title="更多" aria-label="更多">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><circle cx="5" cy="12" r="1.6"/><circle cx="12" cy="12" r="1.6"/><circle cx="19" cy="12" r="1.6"/></svg>
+            </button>
+          </div>
+        </header>
+
+        <div class="messages" id="messages" role="log" aria-live="polite"></div>
+
+        <footer class="composer" id="composer">
+          <div class="composer-bar">
+            <div class="composer-bar-left">
+              <span class="label">翻译草稿</span>
+              <span class="composer-target" title="翻译结果将粘贴到这台终端">
+                <span class="target-dot"></span>
+                目标 <span class="target-name" id="target-name">—</span>
+              </span>
+            </div>
+            <div class="composer-bar-right">
+              <button class="compose-toggle" id="compose-toggle" type="button" title="收起 / 展开">
+                <span>收起</span>
+                <svg class="chev" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="compose-body">
+            <div class="compose-pane in">
+              <div class="compose-pane-head">
+                <span>中文输入</span>
+                <span class="ph-lang" id="in-count">0 字</span>
+              </div>
+              <textarea id="zh-input" class="compose-textarea" rows="2"
+                placeholder="用中文写一句要粘贴到终端的草稿…（例如：把这个 PR 标为阻塞，宽限窗口应当覆盖过期但未到点的刷新令牌）"
+                autocomplete="off" spellcheck="false"></textarea>
+            </div>
+            <div class="compose-pane out">
+              <div class="compose-pane-head">
+                <span>英文结果 · 复制后粘贴到终端</span>
+                <span class="ph-action" id="out-action">⌘C</span>
+              </div>
+              <div id="en-output" class="compose-output placeholder">翻译结果会出现在这里…</div>
+            </div>
+          </div>
+
+          <div class="compose-chips" id="compose-chips">
+            <button class="compose-chip" data-tone="专业"><span class="chip-dot"></span>语气 · 专业</button>
+            <button class="compose-chip" data-tone="友好"><span class="chip-dot"></span>语气 · 友好</button>
+            <button class="compose-chip" data-tone="简洁"><span class="chip-dot"></span>语气 · 简洁</button>
+            <button class="compose-chip" data-domain="code"><span class="chip-dot"></span>领域 · 代码</button>
+            <button class="compose-chip" data-domain="ops"><span class="chip-dot"></span>领域 · 运维</button>
+            <button class="compose-chip" data-domain="docs"><span class="chip-dot"></span>领域 · 文档</button>
+            <button class="compose-chip" data-domain="general"><span class="chip-dot"></span>领域 · 通用</button>
+          </div>
+
+          <div class="compose-foot">
+            <div class="compose-foot-left">
+              <span class="kdb-group"><kbd>⌘</kbd>+<kbd>Enter</kbd> 翻译</span>
+              <span class="kdb-group"><kbd>⌘</kbd>+<kbd>⇧</kbd>+<kbd>C</kbd> 复制</span>
+            </div>
+            <div class="compose-foot-right">
+              <button class="retry-btn" id="retry-btn" type="button" disabled>
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><polyline points="21 3 21 8 16 8"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/><polyline points="3 21 3 16 8 16"/></svg>
+                再试一次
+              </button>
+              <button class="translate-btn" id="translate-btn" type="button">
+                翻译为英文
+                <svg class="arrow" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+              </button>
+              <button class="copy-btn" id="copy-btn" type="button" disabled>
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                复制英文
+              </button>
+            </div>
+          </div>
+
+          <div class="compose-history" id="compose-history">
+            <div class="compose-history-head">
+              <span>最近翻译 · 点 ↺ 可重发到当前终端</span>
+              <button class="hh-clear" id="hh-clear" type="button">清空</button>
+            </div>
+            <div class="compose-history-list" id="history-list"></div>
+          </div>
+        </footer>
+      </section>
+
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    /* ============================================================
+       agent-echo — app logic
+       ============================================================ */
+    (() => {
+      'use strict';
+
+      const SESSIONS = [
+        {
+          id: 'pr-reviewer', kind: 'code', initials: 'PR',
+          name: 'PR Reviewer · main', task: '代码审查 · PR #2847', agentTag: 'Code Agent',
+          status: '进行中', time: '14:32',
+          preview: 'JWT validation solid, refresh-token grace window flagged…',
+          messages: [
+            { kind: 'progress', name: 'PR Reviewer', agentKind: 'code', ts: '14:18',
+              text: "Started review on PR #2847. Diff spans 12 files; focus is the auth refactor and JWT validation order. Pulling the related middleware and refresh-token utility for context." },
+            { kind: 'finding', name: 'PR Reviewer', agentKind: 'code', ts: '14:24',
+              text: "Middleware order check passed. JWT validation properly rejects algorithm-confusion attacks. Blocker found on line 142: the refresh-token logic does not account for tokens that are already expired but still inside the 5-minute grace window. Grace window is intended for exactly this case (see spec §4.2), so the omission is a bug, not a design choice.",
+              translation: '中间件顺序检查通过；JWT 验证正确拒绝算法混淆攻击。阻塞问题一处，第 142 行：刷新令牌逻辑未覆盖"已过期但仍处于 5 分钟宽限窗口内"的情况。宽限窗口正是为这种情形设计的（参看规范 §4.2），所以这是 bug，不是设计选择。' },
+            { kind: 'decision', name: 'PR Reviewer', agentKind: 'code', ts: '14:32',
+              text: "Flagged as a blocking review. Left an inline comment with a suggested fix using the existing `isWithinGraceWindow` utility, plus a unit-test stub that covers the boundary case. Marking the PR as `changes-requested`.",
+              translation: '标为阻塞 review。已留行内评论，建议用现有 `isWithinGraceWindow` 工具函数修复，并附上覆盖边界场景的单元测试桩。把 PR 状态置为 `changes-requested`。' },
+          ],
+        },
+        {
+          id: 'research-pricing', kind: 'research', initials: 'RS',
+          name: 'Research · Claude pricing', task: '市场调研 · 模型定价对比', agentTag: 'Research Agent',
+          status: '已完成', time: '13:05',
+          preview: 'Sonnet 4.6 batch ~$525 / mo vs Opus 4.8 ~$2,625…',
+          messages: [
+            { kind: 'progress', name: 'Research Agent', agentKind: 'research', ts: '12:42',
+              text: "Pulling latest Claude pricing from anthropic.com/pricing. Scoping the comparison to Opus 4.8 and Sonnet 4.6 at our batch load: ~200M input tokens and ~50M output tokens per month." },
+            { kind: 'finding', name: 'Research Agent', agentKind: 'research', ts: '12:58',
+              text: "From the official pricing page (updated last week): Opus 4.8 is $15 / $75 per million input / output tokens. Sonnet 4.6 is $3 / $15. Both drop 50% on the Batch API. At our volume: Sonnet 4.6 on Batch runs ~$525 per month; Opus 4.8 on Batch runs ~$2,625. Source: anthropic.com/pricing.",
+              translation: '从官网价格页（上周更新）查到：Opus 4.8 价格为每百万输入 / 输出 token 15 / 75 美元；Sonnet 4.6 为 3 / 15 美元。两者走 Batch API 都打 5 折。按我们的量，Sonnet 4.6 走 Batch 每月约 525 美元，Opus 4.8 约 2,625 美元。来源：anthropic.com/pricing。' },
+            { kind: 'summary', name: 'Research Agent', agentKind: 'research', ts: '13:05',
+              text: "Cached-input pricing noted: Sonnet 4.6 drops to $0.30 / $3.75 per million on cache hits. Wiring prompt caching into the batch job would cut effective cost another ~40%, putting the monthly run at ~$315. Drafted a short recommendation in the run log.",
+              translation: '缓存输入价格已记入：Sonnet 4.6 命中缓存时降到每百万 0.30 / 3.75 美元。把 prompt caching 接到批处理任务里，实际成本还能再砍约 40%，月开销可降至约 315 美元。已把简短建议写入运行日志。' },
+          ],
+        },
+        {
+          id: 'data-warehouse', kind: 'data', initials: 'DA',
+          name: 'Data · warehouse nightly', task: '排障 · 夜间任务失败', agentTag: 'Data Agent',
+          status: '排障中', time: '11:48',
+          preview: 'events_enriched DAG still on the old columnar schema…',
+          messages: [
+            { kind: 'progress', name: 'Data Agent', agentKind: 'data', ts: '11:30',
+              text: "Investigating last night's warehouse failure. Tracing lineage through `events_raw` → `events_enriched` and pulling the recent schema-change history from the migration log." },
+            { kind: 'finding', name: 'Data Agent', agentKind: 'data', ts: '11:44',
+              text: "Root cause located. `events_raw` was migrated to the new columnar format on Tuesday; the downstream `events_enriched` DAG still references the old schema. The `user_agent` column is now a STRUCT instead of a STRING, which is what made the nightly job fail. Migration is one-way, so the DAG must be patched.",
+              translation: '根因已定位。`events_raw` 表周二迁移到了新列存格式，下游 `events_enriched` DAG 仍引用旧 schema。`user_agent` 列现在变成 STRUCT 而不是 STRING，这就是夜间任务失败的原因。迁移不可逆，DAG 必须打补丁。' },
+            { kind: 'decision', name: 'Data Agent', agentKind: 'data', ts: '11:48',
+              text: "Patching `events_enriched` to use `STRUCT_EXTRACT(user_agent, 'value')`. This keeps the downstream column shape identical, so the existing partition slices do not need to be rebuilt. Will re-run the nightly job after the patch lands and verify the row count matches the partition manifest.",
+              translation: '正在给 `events_enriched` 打补丁，改用 `STRUCT_EXTRACT(user_agent, \'value\')`。这样下游列形态保持不变，现有 partition 切片不用重建。补丁落地后会重跑夜间任务，并核对行数与 partition 清单一致。' },
+          ],
+        },
+        {
+          id: 'devops-staging', kind: 'devops', initials: 'DO',
+          name: 'DevOps · payments-api', task: '部署 · staging 金丝雀', agentTag: 'DevOps Agent',
+          status: '观察中', time: '10:21',
+          preview: 'Canary live — error rate 0.12%, within SLO…',
+          messages: [
+            { kind: 'progress', name: 'DevOps Agent', agentKind: 'devops', ts: '10:08',
+              text: "Deploying `payments-api` to staging. Starting with a 5% canary and a 10-minute observation window on error rate and p99 latency; promote to 100% only if both stay within SLO." },
+            { kind: 'finding', name: 'DevOps Agent', agentKind: 'devops', ts: '10:18',
+              text: "Canary metrics: error rate 0.12% (baseline 0.08%), p99 latency 184ms (baseline 162ms). Both within SLO. No new error signatures in the canary slice. Promoting to 100%.",
+              translation: '金丝雀指标：5% 流量错误率 0.12%（基线 0.08%），p99 延迟 184ms（基线 162ms）。均在 SLO 内。金丝雀切片无新错误指纹。继续推进全量。' },
+            { kind: 'summary', name: 'DevOps Agent', agentKind: 'devops', ts: '10:21',
+              text: "Promotion complete. Production-parity metrics: error rate 0.09%, p99 168ms. Deploy window marked `stable` and the #deploys channel has been pinged with the run id.",
+              translation: '全量完成。当前与生产对标的指标：错误率 0.09%，p99 168ms。已把部署窗口标记为 `stable`，并在 #deploys 频道通知本次运行的 run id。' },
+          ],
+        },
+        {
+          id: 'docs-api', kind: 'docs', initials: 'DC',
+          name: 'Docs · OpenAPI v2', task: '文档生成 · 翻译接口', agentTag: 'Docs Agent',
+          status: '已归档', time: '昨天',
+          preview: 'Pushed to docs/openapi/v2.yaml…',
+          messages: [
+            { kind: 'progress', name: 'Docs Agent', agentKind: 'docs', ts: '昨天 16:02',
+              text: "Generating the OpenAPI spec for the new `POST /v2/translations` endpoint. Capturing request schema, auth requirements, and at least one worked example." },
+            { kind: 'summary', name: 'Docs Agent', agentKind: 'docs', ts: '昨天 16:18',
+              text: "Spec generated. Request body is `{ text, source_lang, target_lang, tone }`. Auth requires a Bearer token with the `translate:write` scope. Rate limit is 60 req/min. Included a 200 response example plus the two error variants (`401` for missing scope, `429` for quota). Pushed to `docs/openapi/v2.yaml`.",
+              translation: '规范已生成。请求体为 `{ text, source_lang, target_lang, tone }`。鉴权需带 `translate:write` scope 的 Bearer 令牌。限流 60 次/分。已附 200 响应示例以及两种错误变体（缺 scope 的 401、超额的 429）。已推送到 `docs/openapi/v2.yaml`。' },
+            { kind: 'decision', name: 'Docs Agent', agentKind: 'docs', ts: '昨天 16:34',
+              text: "Documented the `tone` field as an enum: `formal | neutral | casual`, default `neutral`, applied to the `target_lang` output only. Updated the schema description and the 200 example so the default and scope are unambiguous.",
+              translation: '已把 `tone` 字段写为枚举：`formal | neutral | casual`，默认 `neutral`，仅作用于 `target_lang` 输出。schema 说明和 200 示例已同步更新，默认值与作用范围都明确。' },
+          ],
+        },
+      ];
+
+      const ICON = {
+        translate: `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h6"/><path d="M5 12h4"/><path d="m3 20 4-8 4 8"/><path d="M5 16h4"/><path d="M14 19l4-10 4 10"/><path d="M15.5 16h5"/></svg>`,
+        speaker:   `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.5 8.5a4 4 0 0 1 0 7"/><path d="M18.5 5.5a8 8 0 0 1 0 13"/></svg>`,
+        copy:      `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>`,
+      };
+
+      let activeId = SESSIONS[0].id;
+      let query = '';
+      const ui = new Map();
+      const msgKey = (sid, idx) => `${sid}#${idx}`;
+
+      const $ = (id) => document.getElementById(id);
+      const $list = $('session-list'), $messages = $('messages');
+      const $title = $('conv-title'), $task = $('conv-task'), $agent = $('conv-agent');
+      const $avatar = $('conv-avatar'), $search = $('search-input');
+      const $composer = $('composer'), $zhInput = $('zh-input');
+      const $enOutput = $('en-output'), $inCount = $('in-count');
+      const $targetName = $('target-name');
+      const $translateBtn = $('translate-btn'), $retryBtn = $('retry-btn'), $copyBtn = $('copy-btn');
+      const $composeToggle = $('compose-toggle');
+      const $historyList = $('history-list'), $hhClear = $('hh-clear');
+      const $composeChips = $('compose-chips');
+
+      const composeState = { tone: null, domain: 'general', history: [] };
+      const HISTORY_KEY = 'agent-monitor:compose-history';
+      try { composeState.history = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch (_) { composeState.history = []; }
+
+      const $toast = $('toast'), $liveCount = $('live-count');
+
+      const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => (
+        { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+      ));
+      const formatText = (raw) => {
+        let s = escapeHtml(raw);
+        s = s.replace(/`([^`]+)`/g, (_, code) => `<code>${code}</code>`);
+        s = s.replace(/\b(anthropic\.com\/pricing)\b/g, '<a class="inline-link" href="#" onclick="event.preventDefault()">$1</a>');
+        return s;
+      };
+      const showToast = (msg) => {
+        $toast.innerHTML = `<span class="dot-inline"></span>${escapeHtml(msg)}`;
+        $toast.classList.add('show');
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => $toast.classList.remove('show'), 1800);
+      };
+      const renderWave = () => `<span class="wave" aria-hidden="true"><span></span><span></span><span></span><span></span></span>`;
+
+      function renderSidebar() {
+        $list.innerHTML = '';
+        const filtered = query
+          ? SESSIONS.filter((s) => {
+              const q = query.toLowerCase();
+              return s.name.toLowerCase().includes(q) ||
+                     s.task.toLowerCase().includes(q) ||
+                     s.preview.toLowerCase().includes(q) ||
+                     s.messages.some((m) => m.text.toLowerCase().includes(q));
+            })
+          : SESSIONS;
+
+        if (!filtered.length) {
+          const empty = document.createElement('li');
+          empty.style.cssText = 'padding: 24px 12px; text-align: center; color: var(--dim); font-size: 12px;';
+          empty.textContent = '没有匹配的会话';
+          $list.appendChild(empty);
+          return;
+        }
+
+        for (const s of filtered) {
+          const li = document.createElement('li');
+          li.className = `session-item${s.id === activeId ? ' active' : ''}`;
+          li.dataset.id = s.id;
+          li.setAttribute('role', 'option');
+          li.setAttribute('aria-selected', s.id === activeId);
+          li.innerHTML = `
+            <div class="s-avatar" data-kind="${s.kind}">${s.initials}</div>
+            <div class="s-body">
+              <span class="s-name">${escapeHtml(s.name)}</span>
+              <div class="s-preview">${escapeHtml(s.preview)}</div>
+            </div>
+            <div class="s-right">
+              <span class="s-time">${escapeHtml(s.time)}</span>
+            </div>
+          `;
+          li.addEventListener('click', () => switchSession(s.id));
+          $list.appendChild(li);
+        }
+      }
+
+      function refreshCounts() {
+        $liveCount.textContent = `${SESSIONS.length} 个终端在线`;
+      }
+
+      function renderConversation() {
+        const s = SESSIONS.find((x) => x.id === activeId) || SESSIONS[0];
+        $title.textContent = s.name;
+        $task.textContent = s.task;
+        $agent.textContent = s.agentTag;
+        $avatar.textContent = s.initials;
+        $avatar.dataset.kind = s.kind;
+        document.querySelector('.conv-status').textContent = s.status;
+
+        $messages.innerHTML = '';
+        const sep = document.createElement('div');
+        sep.className = 'day-sep';
+        sep.textContent = s.time.includes('昨天') ? '昨天' : '今天';
+        $messages.appendChild(sep);
+
+        s.messages.forEach((m, idx) => $messages.appendChild(renderMessage(s, m, idx)));
+        requestAnimationFrame(() => { $messages.scrollTop = $messages.scrollHeight; });
+      }
+
+      function renderMessage(session, m, idx) {
+        const key = msgKey(session.id, idx);
+        const state = ui.get(key) || { translated: false, speaking: false };
+        ui.set(key, state);
+
+        const row = document.createElement('article');
+        row.className = 'msg';
+        row.dataset.key = key;
+
+        const avLabel = session.initials;
+        const avKind = m.agentKind || session.kind;
+        const kindLabel = m.kind || 'progress';
+        const kindText = ({progress: '进度', finding: '发现', decision: '决策', summary: '总结'})[kindLabel] || '进度';
+        const hasTr = !!m.translation;
+        const trId = `tr-${key.replace(/[^a-z0-9]/gi, '-')}`;
+
+        row.innerHTML = `
+          <div class="av" data-kind="${avKind}">${avLabel}</div>
+          <div class="bubbles">
+            <div class="msg-meta">
+              <span class="name">${escapeHtml(m.name)}</span>
+              <span class="kind" data-kind="${kindLabel}">${kindText}</span>
+              <span class="ts">${escapeHtml(m.ts)}</span>
+            </div>
+            <div class="bubble">${formatText(m.text)}</div>
+            <div class="bubble-actions">
+              <button class="act-btn translate-btn ${state.translated ? 'active' : ''}" data-action="translate">
+                <span class="icon">${ICON.translate}</span>${state.translated ? '隐藏译文' : '翻译'}
+              </button>
+              <button class="act-btn speak-btn ${state.speaking ? 'speaking' : ''}" data-action="speak">
+                <span class="icon">${state.speaking ? renderWave() : ICON.speaker}</span>${state.speaking ? '朗读中' : '朗读'}
+              </button>
+              <button class="act-btn copy-btn" data-action="copy">
+                <span class="icon">${ICON.copy}</span>复制
+              </button>
+            </div>
+            ${hasTr ? `<div class="translation ${state.translated ? 'show' : ''}" id="${trId}">
+              <span class="tr-tag">译文 · 中文</span>
+              <div class="tr-body">${formatText(m.translation)}</div>
+            </div>` : ''}
+          </div>
+        `;
+
+        const trBtn = row.querySelector('[data-action="translate"]');
+        if (trBtn && hasTr) trBtn.addEventListener('click', (e) => { e.stopPropagation(); onTranslate(session, idx, trBtn, row); });
+        const spBtn = row.querySelector('[data-action="speak"]');
+        spBtn.addEventListener('click', (e) => { e.stopPropagation(); onSpeak(session, idx, spBtn); });
+        const cpBtn = row.querySelector('[data-action="copy"]');
+        cpBtn.addEventListener('click', (e) => { e.stopPropagation(); onCopy(session, idx, cpBtn); });
+
+        // 点击正文 → 翻译（跳过内嵌链接、code 块等可交互子元素）
+        const bubble = row.querySelector('.bubble');
+        bubble.addEventListener('click', (e) => {
+          if (e.target.closest('.inline-link, code, a, button')) return;
+          onTranslate(session, idx, trBtn, row);
+        });
+
+        return row;
+      }
+
+      function onTranslate(session, idx, btn, row) {
+        const m = session.messages[idx];
+        const key = msgKey(session.id, idx);
+        const state = ui.get(key);
+        const trEl = row.querySelector('.translation');
+
+        if (state.translated) {
+          trEl.classList.remove('show');
+          state.translated = false;
+          btn.classList.remove('active');
+          btn.innerHTML = `<span class="icon">${ICON.translate}</span>翻译`;
+          return;
+        }
+
+        if (!m.translation) {
+          showToast('这条暂未收录译文');
+          return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = `<span class="icon">${ICON.translate}</span>翻译中…`;
+        trEl.classList.add('show', 'loading');
+        trEl.querySelector('.tr-body').textContent = '正在调用翻译服务…';
+
+        setTimeout(() => {
+          trEl.classList.remove('loading');
+          trEl.querySelector('.tr-body').innerHTML = formatText(m.translation);
+          state.translated = true;
+          btn.classList.add('active');
+          btn.disabled = false;
+          btn.innerHTML = `<span class="icon">${ICON.translate}</span>隐藏译文`;
+        }, 620);
+      }
+
+      function onSpeak(session, idx, btn) {
+        const m = session.messages[idx];
+        const key = msgKey(session.id, idx);
+        const state = ui.get(key);
+
+        if (window._currentSpeak && window._currentSpeak.key !== key) {
+          const prev = window._currentSpeak;
+          try { window.speechSynthesis.cancel(); } catch (_) {}
+          const prevState = ui.get(prev.key);
+          if (prevState) {
+            prevState.speaking = false;
+            const prevBtn = document.querySelector(`.msg[data-key="${prev.key}"] .speak-btn`);
+            if (prevBtn) {
+              prevBtn.classList.remove('speaking');
+              prevBtn.innerHTML = `<span class="icon">${ICON.speaker}</span>朗读`;
+            }
+          }
+        }
+
+        if (state.speaking) {
+          try { window.speechSynthesis.cancel(); } catch (_) {}
+          state.speaking = false;
+          btn.classList.remove('speaking');
+          btn.innerHTML = `<span class="icon">${ICON.speaker}</span>朗读`;
+          window._currentSpeak = null;
+          return;
+        }
+
+        const speakTranslation = state.translated && m.translation;
+        const text = speakTranslation ? m.translation : m.text;
+        const lang = speakTranslation ? 'zh-CN' : 'en-US';
+
+        if (!('speechSynthesis' in window)) {
+          showToast('当前浏览器不支持朗读');
+          return;
+        }
+
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = lang; u.rate = 0.98; u.pitch = 1.0;
+        u.onend = u.onerror = () => {
+          state.speaking = false;
+          btn.classList.remove('speaking');
+          btn.innerHTML = `<span class="icon">${ICON.speaker}</span>朗读`;
+          window._currentSpeak = null;
+        };
+        try { window.speechSynthesis.cancel(); } catch (_) {}
+        window.speechSynthesis.speak(u);
+        state.speaking = true;
+        btn.classList.add('speaking');
+        btn.innerHTML = `<span class="icon">${renderWave()}</span>朗读中`;
+        window._currentSpeak = { key, u };
+      }
+
+      function onCopy(session, idx, btn) {
+        const m = session.messages[idx];
+        const key = msgKey(session.id, idx);
+        const state = ui.get(key);
+        const text = (state.translated && m.translation ? m.translation : m.text) + '\n\n— ' + m.name + ' · ' + m.ts;
+        const fallback = () => {
+          const ta = document.createElement('textarea');
+          ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px;';
+          document.body.appendChild(ta); ta.select();
+          try { document.execCommand('copy'); } catch (_) {}
+          document.body.removeChild(ta);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).catch(fallback);
+        } else {
+          fallback();
+        }
+        const original = btn.innerHTML;
+        btn.innerHTML = `<span class="icon">${ICON.translate}</span>已复制`;
+        showToast('已复制到剪贴板');
+        setTimeout(() => { btn.innerHTML = original; }, 1200);
+      }
+
+      function switchSession(id) {
+        if (id === activeId) return;
+        if (window._currentSpeak) {
+          try { window.speechSynthesis.cancel(); } catch (_) {}
+          window._currentSpeak = null;
+        }
+        activeId = id;
+        renderSidebar();
+        renderConversation();
+        syncTargetName();
+      }
+
+      // filter tabs removed: 旁路监听器无 "未读 / 已标星" 概念
+
+      $search.addEventListener('input', (e) => {
+        query = e.target.value.trim();
+        renderSidebar();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+          e.preventDefault(); $search.focus(); $search.select();
+        }
+      });
+
+      function nowHHMM() {
+        const d = new Date();
+        return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+      }
+
+      // ---- Compose helper (中 → 英 翻译 + 复制) -----------------------
+      const TRANSLATE_VARIANTS = [
+        (zh, tone, domain) => {
+          const tonePrefix = tone === '友好' ? 'Hey, ' : tone === '简洁' ? '' : '';
+          const tail = tone === '简洁' ? '.' : tone === '友好' ? ' 🙂' : '.';
+          return `${tonePrefix}${zh.replace(/[。！？]$/, '')}${tail}`;
+        },
+        (zh, tone, domain) => {
+          const domainHint = domain === 'code' ? ' (technical context)' : domain === 'ops' ? ' (SRE context)' : domain === 'docs' ? ' (documentation)' : '';
+          return `Please note${domainHint}: ${zh}${tone === '友好' ? ' — thanks!' : '.'}`;
+        },
+        (zh, tone, domain) => {
+          return `Following up: ${zh}${tone === '专业' ? ' Please advise.' : tone === '友好' ? ' Thanks for taking a look.' : ''}`;
+        },
+      ];
+      function mockTranslate(zh) {
+        const dict = [
+          [/(帮我|请|麻烦)?(.*?)(看看|审查|评估|检查)(.*?)(设计|实现|代码|逻辑|方案|做法|思路)/,
+           (_m, _p1, _p2, act, _p4, what) => {
+             const subject = (what || 'this').trim();
+             const verbMap = { '看看': 'take a look at', '审查': 'review', '评估': 'evaluate', '检查': 'check' };
+             return `Could you ${verbMap[act] || 'review'} whether the ${subject} is reasonable here?`;
+           }],
+          [/(.*?)是(不是|否)(.*)/, (_m, p1, p2, p3) => `Is it the case that ${p1} is not ${p3}?`],
+          [/不(.*)/, (_m, p1) => `I don't think we should ${p1}.`],
+          [/回滚/, () => "Let's roll this back."],
+          [/重试|再来一次/, () => "Please retry."],
+          [/谢谢|感谢|辛苦了/, () => "Thanks for the help."],
+        ];
+        for (const [re, fn] of dict) {
+          const m = zh.match(re);
+          if (m) return fn(m, ...m.slice(1));
+        }
+        return `Regarding your request: ${zh.replace(/[。！？]/g, '')}. Please proceed.`;
+      }
+      function pickVariant() {
+        return TRANSLATE_VARIANTS[Math.floor(Math.random() * TRANSLATE_VARIANTS.length)];
+      }
+      function translateComposer(opts = {}) {
+        const text = $zhInput.value.trim();
+        if (!text) { showToast('先写一句中文'); $zhInput.focus(); return; }
+        const variant = opts.variant || pickVariant();
+        const $btn = $translateBtn;
+        $btn.disabled = true;
+        $btn.innerHTML = '<span class="arrow">●</span> 翻译中…';
+        $enOutput.classList.remove('placeholder');
+        $enOutput.innerHTML = '<span class="stream"></span>';
+        const start = performance.now();
+
+        setTimeout(() => {
+          const baseEn = mockTranslate(text);
+          const en = variant(baseEn, composeState.tone, composeState.domain);
+          const ms = Math.round(performance.now() - start);
+          $enOutput.textContent = en;
+          $btn.disabled = false;
+          $btn.innerHTML = '翻译为英文 <svg class="arrow" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
+          $copyBtn.disabled = false;
+          $retryBtn.disabled = false;
+          composeState._last = { zh: text, en, ts: Date.now() };
+          pushHistory({ zh: text, en, session: activeId, ts: Date.now() });
+          showToast(`已翻译 · ${ms}ms · 复制后到 ${currentSessionName()} 粘贴`);
+        }, 480 + Math.random() * 240);
+      }
+      function retryTranslate() {
+        if (!composeState._last) { showToast('先翻译一次'); return; }
+        $zhInput.value = composeState._last.zh;
+        $inCount.textContent = `${composeState._last.zh.length} 字`;
+        translateComposer({ variant: pickVariant() });
+      }
+      function copyEn() {
+        const text = $enOutput.textContent.trim();
+        if (!text || $enOutput.classList.contains('placeholder')) { showToast('还没有可复制的内容'); return; }
+        const tail = `\n\n— translated for ${currentSessionName()} · ${nowHHMM()}`;
+        const payload = text + tail;
+        const fallback = () => {
+          const ta = document.createElement('textarea');
+          ta.value = payload; ta.style.cssText = 'position:fixed;left:-9999px;';
+          document.body.appendChild(ta); ta.select();
+          try { document.execCommand('copy'); } catch (_) {}
+          document.body.removeChild(ta);
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(payload).catch(fallback);
+        } else {
+          fallback();
+        }
+        const original = $copyBtn.innerHTML;
+        $copyBtn.classList.add('copied');
+        $copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> 已复制 · 切到终端 Cmd+V`;
+        showToast(`已复制 · 切到 ${currentSessionName()} 粘贴 ⌘V`);
+        setTimeout(() => {
+          $copyBtn.classList.remove('copied');
+          $copyBtn.innerHTML = original;
+        }, 1800);
+      }
+      function currentSessionName() {
+        const s = SESSIONS.find((x) => x.id === activeId);
+        return s ? s.name : '当前终端';
+      }
+      function syncTargetName() {
+        if ($targetName) $targetName.textContent = currentSessionName();
+      }
+      function pushHistory(item) {
+        composeState.history = [item, ...composeState.history.filter((h) => h.zh !== item.zh)].slice(0, 6);
+        try { localStorage.setItem(HISTORY_KEY, JSON.stringify(composeState.history)); } catch (_) {}
+        renderHistory();
+      }
+      function renderHistory() {
+        $historyList.innerHTML = '';
+        if (!composeState.history.length) {
+          const empty = document.createElement('div');
+          empty.style.cssText = 'padding: 8px 4px; font-size: 12px; color: var(--dim); text-align: center;';
+          empty.textContent = '还没有翻译记录';
+          $historyList.appendChild(empty);
+          return;
+        }
+        composeState.history.forEach((h) => {
+          const row = document.createElement('div');
+          row.className = 'history-item';
+          const zh = h.zh.length > 40 ? h.zh.slice(0, 40) + '…' : h.zh;
+          const en = h.en.length > 60 ? h.en.slice(0, 60) + '…' : h.en;
+          row.innerHTML = `
+            <span class="hi-src" title="${escapeHtml(h.zh)}">${escapeHtml(zh)}</span>
+            <span class="hi-arrow">→</span>
+            <span class="hi-en" title="${escapeHtml(h.en)}">${escapeHtml(en)}</span>
+            <span class="hi-actions">
+              <button class="hi-act" data-action="reuse" title="把这段英文塞回输出框">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 14 4 9 9 4"/><path d="M20 20v-7a4 4 0 0 0-4-4H4"/></svg>
+              </button>
+              <button class="hi-act" data-action="copy" title="重新复制">
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg>
+              </button>
+            </span>`;
+          row.querySelector('[data-action="reuse"]').addEventListener('click', () => {
+            $enOutput.classList.remove('placeholder');
+            $enOutput.textContent = h.en;
+            $copyBtn.disabled = false;
+            $retryBtn.disabled = false;
+            composeState._last = { zh: h.zh, en: h.en, ts: h.ts };
+            showToast('已回填到英文结果');
+          });
+          row.querySelector('[data-action="copy"]').addEventListener('click', () => {
+            const payload = h.en + `\n\n— translated for ${currentSessionName()} · ${nowHHMM()}`;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(payload).catch(() => {});
+            }
+            showToast('已复制到剪贴板');
+          });
+          $historyList.appendChild(row);
+        });
+      }
+      $zhInput.addEventListener('input', (e) => {
+        $inCount.textContent = `${e.target.value.length} 字`;
+      });
+      $translateBtn.addEventListener('click', () => translateComposer());
+      $retryBtn.addEventListener('click', () => retryTranslate());
+      $copyBtn.addEventListener('click', copyEn);
+      $composeToggle.addEventListener('click', () => {
+        $composer.classList.toggle('collapsed');
+        $composeToggle.querySelector('span').textContent = $composer.classList.contains('collapsed') ? '展开' : '收起';
+      });
+      $hhClear.addEventListener('click', () => {
+        composeState.history = [];
+        try { localStorage.removeItem(HISTORY_KEY); } catch (_) {}
+        renderHistory();
+        showToast('已清空翻译历史');
+      });
+      $composeChips.addEventListener('click', (e) => {
+        const btn = e.target.closest('.compose-chip');
+        if (!btn) return;
+        if (btn.dataset.tone) {
+          composeState.tone = composeState.tone === btn.dataset.tone ? null : btn.dataset.tone;
+        } else if (btn.dataset.domain) {
+          composeState.domain = composeState.domain === btn.dataset.domain ? 'general' : btn.dataset.domain;
+        }
+        $composeChips.querySelectorAll('.compose-chip').forEach((c) => {
+          const isTone = c.dataset.tone;
+          const isDomain = c.dataset.domain;
+          if (isTone) c.classList.toggle('active', c.dataset.tone === composeState.tone);
+          if (isDomain) c.classList.toggle('active', c.dataset.domain === composeState.domain);
+        });
+        showToast(
+          composeState.tone || composeState.domain !== 'general'
+            ? `已应用：${composeState.tone || ''}${composeState.tone && composeState.domain !== 'general' ? ' · ' : ''}${composeState.domain !== 'general' ? '领域 ' + composeState.domain : ''}`.trim()
+            : '已重置偏好'
+        );
+      });
+      $zhInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); translateComposer(); }
+      });
+      document.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'c') {
+          if (document.activeElement && document.activeElement.tagName === 'TEXTAREA') return;
+          if ($copyBtn.disabled) return;
+          e.preventDefault(); copyEn();
+        }
+      });
+
+      refreshCounts();
+      renderSidebar();
+      renderConversation();
+      syncTargetName();
+      renderHistory();
+      window.__agentEcho = { SESSIONS, switchSession, ui, composeState };
+    })();
+  </script>
+</body>
+</html>
