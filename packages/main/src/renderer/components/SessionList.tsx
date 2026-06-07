@@ -96,10 +96,15 @@ export function SessionList() {
 
       {/* Footer */}
       <div
-        className="flex items-center justify-center gap-2 py-3 px-4 border-t text-xs"
+        className="flex items-center gap-2 py-3 px-4 border-t text-xs"
         style={{ borderColor: 'var(--border-soft)', color: 'var(--muted)' }}
       >
-        <span className="w-1.5 h-1.5 rounded-full" style={{ background: 'var(--live)', boxShadow: '0 0 6px oklch(72% 0.155 145 / 0.5)' }} />
+        <span
+          className="w-1.5 h-1.5 rounded-full shrink-0"
+          style={{ background: 'var(--live)', boxShadow: '0 0 6px oklch(72% 0.155 145 / 0.5)' }}
+        />
+        <span style={{ color: 'var(--fg)', fontWeight: 500 }}>{sessions.length} 个终端在线</span>
+        <span style={{ color: 'var(--dim)' }}>·</span>
         <span>持续监听中</span>
       </div>
     </div>
