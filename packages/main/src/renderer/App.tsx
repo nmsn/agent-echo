@@ -52,7 +52,7 @@ export function App() {
   return (
     <div
       className="h-screen flex overflow-hidden"
-      style={{ background: 'var(--bg)', minWidth: '1100px' }}
+      style={{ background: 'var(--bg)' }}
     >
       {/* Left Sidebar — 340px */}
       <aside

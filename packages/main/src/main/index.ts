@@ -41,8 +41,10 @@ function getAppPaths() {
 function createWindow(): void {
   const paths = getAppPaths()
   mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
+    width: 1280,
+    height: 800,
+    minWidth: 1100,
+    minHeight: 700,
     webPreferences: {
       preload: paths.preloadPath,
       contextIsolation: true,
